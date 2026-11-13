@@ -6,9 +6,15 @@ async function bootstrap() {
     instrument: ObserveInstrument,
   });
 
-  // Libera o Angular (localhost:4200) a chamar a API
-  app.enableCors({ origin: process.env.WEB_ORIGIN ?? 'http://localhost:4200' });
+  // WEB_ORIGIN aceita vários endereços separados por vírgula:
+  //   WEB_ORIGIN=http://localhost:4200,https://ddhub-br.vercel.app
+  const origins = (process.env.WEB_ORIGIN ?? 'http://localhost:4200')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  app.enableCors({ origin: origins });
 
+  // O Render define a porta pela variável PORT
   await app.listen(process.env.PORT ?? 3000);
 }
 await bootstrap();
