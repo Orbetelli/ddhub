@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { ApiHero, ApiItem } from './deadlock.types.js';
+import type { ApiHero, ApiItem, ApiMap } from './deadlock.types.js';
 
 /**
  * URL base da Deadlock API em UM lugar só.
@@ -23,7 +23,20 @@ export class DeadlockApiClient {
     return this.get<ApiItem[]>('/v1/assets/items', lang);
   }
 
-  private async get<T>(path: string, lang: Lang, attempts = 3): Promise<T> {
+  /** NPCs (monstros, chefes, estruturas). Pode vir como lista ou objeto. */
+  getNpcUnits(lang: Lang): Promise<unknown> {
+    return this.get<unknown>('/v1/assets/npc-units', lang, 3, false);
+  }
+
+  getMap(): Promise<ApiMap> {
+    return this.get<ApiMap>('/v1/assets/map', 'english', 3, false);
+  }
+
+  getIcons(): Promise<unknown> {
+    return this.get<unknown>('/v1/assets/icons', 'english', 3, false);
+  }
+
+  private async get<T>(path: string, lang: Lang, attempts = 3, expectList = true): Promise<T> {
     const url = `${this.baseUrl}${path}?language=${lang}`;
 
     for (let attempt = 1; ; attempt++) {
@@ -39,7 +52,10 @@ export class DeadlockApiClient {
         if (!res.ok) throw new Error(`HTTP ${res.status} em ${path}`);
 
         const data = (await res.json()) as unknown;
-        if (!Array.isArray(data)) throw new Error(`Resposta inesperada em ${path}: não é uma lista`);
+        if (expectList && !Array.isArray(data)) throw new Error(`Resposta inesperada em ${path}: não é uma lista`);
+        if (!expectList && (data === null || typeof data !== 'object')) {
+          throw new Error(`Resposta inesperada em ${path}`);
+        }
         return data as T;
       } catch (err) {
         if (attempt >= attempts) throw err;

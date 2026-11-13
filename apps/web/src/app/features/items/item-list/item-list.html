@@ -1,0 +1,88 @@
+<section class="container page">
+  <header class="page__head">
+    <h1 class="page__title">Itens</h1>
+    <p class="page__intro">
+      Todos os itens da loja, organizados como no jogo: escolha a categoria e veja os itens por tier.
+      Clique num item para ver o que ele faz, do que é feito e quais heróis mais compram.
+    </p>
+  </header>
+
+  <div class="filters" role="search">
+    <label class="filters__search">
+      <span class="sr-only">Buscar item</span>
+      <input type="search" placeholder="Buscar item (PT ou EN)…" [value]="search()" (input)="onSearch($event)" />
+    </label>
+
+    <div class="chips" role="group" aria-label="Categoria">
+      @for (opt of slotOptions; track opt[0]) {
+        <button
+          type="button"
+          class="chip"
+          [class]="'chip--' + opt[0]"
+          [attr.aria-pressed]="!searching() && slot() === opt[0]"
+          [disabled]="searching()"
+          (click)="slot.set(opt[0])"
+        >
+          {{ opt[1] }}
+        </button>
+      }
+    </div>
+
+    <label class="toggle">
+      <input type="checkbox" [checked]="onlyActive()" (change)="onlyActive.set(!onlyActive())" />
+      Só itens ativos
+    </label>
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="status">Carregando itens…</p>
+    }
+    @case ('error') {
+      <p class="status status--error">Não foi possível carregar os itens. Confere se a API está rodando em localhost:3000.</p>
+    }
+    @default {
+      <p class="count" aria-live="polite">
+        {{ visible().length }} itens
+        @if (searching()) { · buscando em todas as categorias }
+      </p>
+
+      @if (columns().length) {
+        <div class="shop" [class.shop--search]="searching()" [attr.data-slot]="searching() ? null : slot()">
+          @for (col of columns(); track col.tier) {
+            <section class="tier">
+              <h2 class="tier__head">
+                <span>Tier {{ col.tier || '?' }}</span>
+                @if (col.cost !== null) {
+                  <span class="tier__cost">{{ col.cost.toLocaleString('pt-BR') }} almas</span>
+                }
+              </h2>
+              <ul class="tier__items">
+                @for (it of col.items; track it.id) {
+                  <li>
+                    <a class="tile" [class]="'tile--' + (it.slot ?? 'none')" [routerLink]="['/itens', it.slug]">
+                      @if (it.image_url) {
+                        <img [src]="it.image_url" alt="" width="44" height="44" loading="lazy" />
+                      }
+                      <span class="tile__name">{{ names.primary(it.name, it.name_en) }}</span>
+                      @if (it.is_active_item) {
+                        <span class="tile__active" title="Item ativo (tem tecla para usar)">Ativo</span>
+                      }
+                    </a>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        </div>
+      } @else {
+        <p class="empty">
+          Nenhum item encontrado.
+          <button type="button" class="link-btn" (click)="clear()">Limpar filtros</button>
+        </p>
+      }
+
+      <p class="credit">Dados e imagens: Deadlock API · Deadlock é marca da Valve.</p>
+    }
+  }
+</section>

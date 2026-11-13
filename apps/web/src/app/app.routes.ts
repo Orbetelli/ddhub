@@ -32,7 +32,26 @@ export const routes: Routes = [
     title: 'Herói · DDhub',
     loadComponent: () => import('./features/heroes/hero-detail/hero-detail').then((m) => m.HeroDetail),
   },
-  ...section('itens', 'Itens', 'slug'),
+  {
+    path: 'itens',
+    title: 'Itens · DDhub',
+    loadComponent: () => import('./features/items/item-list/item-list').then((m) => m.ItemList),
+  },
+  {
+    path: 'itens/:slug',
+    title: 'Item · DDhub',
+    loadComponent: () => import('./features/items/item-detail/item-detail').then((m) => m.ItemDetail),
+  },
+  {
+    path: 'mapa',
+    title: 'Mapa interativo · DDhub',
+    loadComponent: () => import('./features/map/map-page').then((m) => m.MapPage),
+  },
+  {
+    path: 'criadores',
+    title: 'Criadores BR · DDhub',
+    loadComponent: () => import('./features/creators/creator-list').then((m) => m.CreatorList),
+  },
   ...section('builds', 'Builds', 'id'),
   ...section('times', 'Times', 'slug'),
   ...section('forum', 'Fórum', 'id'),

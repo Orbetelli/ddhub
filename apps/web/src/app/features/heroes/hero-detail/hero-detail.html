@@ -82,6 +82,7 @@
                       <ul>@for (w of h.guide?.weaknesses ?? []; track w) { <li>{{ w }}</li> }</ul>
                     </div>
                   </div>
+                  <button type="button" class="link-btn" (click)="tab.set('guide')">Ler o guia “Como jogar” »</button>
                 } @else {
                   <p class="note">O guia “Como jogar” deste herói ainda está sendo escrito pela comunidade.</p>
                 }
@@ -102,6 +103,44 @@
                 }
               </section>
             </div>
+          }
+
+          @case ('guide') {
+            @if (h.guide; as g) {
+              <div class="guide">
+                @if (g.summary_md) {
+                  <section class="box guide__summary">
+                    <h2 class="box__title">Resumo</h2>
+                    <app-markdown [source]="g.summary_md" />
+                  </section>
+                }
+
+                @if (guideSections().length > 1) {
+                  <nav class="guide__toc" aria-label="Seções do guia">
+                    @for (sec of guideSections(); track sec.id) {
+                      <a [href]="'#guia-' + sec.id" (click)="$event.preventDefault(); scrollTo('guia-' + sec.id)">{{ sec.title }}</a>
+                    }
+                  </nav>
+                }
+
+                @for (sec of guideSections(); track sec.id) {
+                  <section class="box guide__section" [id]="'guia-' + sec.id">
+                    <h2 class="box__title">{{ sec.title }}</h2>
+                    <app-markdown [source]="sec.md" />
+                  </section>
+                }
+
+                <p class="note">
+                  Guia escrito pela equipe DDhub. Nomes de habilidades e itens vêm direto do jogo;
+                  números mudam a cada patch, então confira a aba Habilidades.
+                </p>
+              </div>
+            } @else {
+              <section class="box">
+                <h2 class="box__title">Como jogar</h2>
+                <p class="note">O guia deste herói ainda está sendo escrito. Enquanto isso, veja as abas Habilidades e Itens populares.</p>
+              </section>
+            }
           }
 
           @case ('abilities') {
@@ -152,13 +191,15 @@
                   <h2 class="box__title">{{ phase.label }}</h2>
                   <ul class="items">
                     @for (it of phase.items; track it.id) {
-                      <li [class]="'item ' + slotClass(it)">
-                        @if (it.shop_image_url ?? it.image_url; as img) {
-                          <img [src]="img" alt="" width="40" height="40" loading="lazy" />
-                        }
-                        <span class="item__name">{{ names.primary(it.name, it.name_en) }}</span>
-                        <span class="item__num" title="Taxa de escolha">{{ it.pick_pct }}%</span>
-                        <span class="item__num item__num--win" title="Taxa de vitória">{{ it.winrate_pct }}%</span>
+                      <li>
+                        <a [class]="'item ' + slotClass(it)" [routerLink]="['/itens', it.slug]">
+                          @if (it.shop_image_url ?? it.image_url; as img) {
+                            <img [src]="img" alt="" width="40" height="40" loading="lazy" />
+                          }
+                          <span class="item__name">{{ names.primary(it.name, it.name_en) }}</span>
+                          <span class="item__num" title="Taxa de escolha">{{ it.pick_pct }}%</span>
+                          <span class="item__num item__num--win" title="Taxa de vitória">{{ it.winrate_pct }}%</span>
+                        </a>
                       </li>
                     }
                   </ul>

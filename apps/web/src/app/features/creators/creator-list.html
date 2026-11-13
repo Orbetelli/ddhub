@@ -1,0 +1,120 @@
+<!-- ============ Faixa de destaque ============ -->
+<header class="hero">
+  <div class="container hero__inner">
+    <div class="hero__text">
+      <p class="hero__kicker">Comunidade</p>
+      <h1 class="hero__title">Criadores <span>BR</span></h1>
+      <p class="hero__intro">
+        Streamers e YouTubers brasileiros que fazem conteúdo de Deadlock.
+        Siga, assista e fortaleça a cena nacional.
+      </p>
+    </div>
+
+    @if (state().status === 'ok') {
+      <dl class="stats">
+        <div class="stat"><dt>Criadores</dt><dd>{{ stats().total }}</dd></div>
+        <div class="stat stat--twitch"><dt>Na Twitch</dt><dd>{{ stats().twitch }}</dd></div>
+        <div class="stat stat--youtube"><dt>No YouTube</dt><dd>{{ stats().youtube }}</dd></div>
+      </dl>
+    }
+  </div>
+</header>
+
+<section class="container page">
+  <!-- ============ Ao vivo agora (próximo passo: Twitch API) ============ -->
+  <section class="live" aria-labelledby="live-title">
+    <h2 id="live-title" class="section-title"><span class="live__dot" aria-hidden="true"></span> Ao vivo agora</h2>
+    <p class="live__empty">Em breve: aqui vão aparecer os criadores que estiverem em live de Deadlock neste momento.</p>
+  </section>
+
+  <!-- ============ Lista ============ -->
+  <div class="list-head">
+    <h2 class="section-title">Todos os criadores</h2>
+    @if (tags().length > 1) {
+      <div class="chips" role="group" aria-label="Filtrar por tipo de conteúdo">
+        <button type="button" class="chip" [attr.aria-pressed]="tag() === null" (click)="tag.set(null)">Todos</button>
+        @for (t of tags(); track t) {
+          <button type="button" class="chip" [attr.aria-pressed]="tag() === t" (click)="tag.set(t)">{{ t }}</button>
+        }
+      </div>
+    }
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <ul class="grid" aria-busy="true">
+        @for (g of ghosts; track g) { <li class="card card--skeleton"></li> }
+      </ul>
+    }
+
+    @case ('error') {
+      <div class="notice notice--error">
+        <strong>Não deu para carregar os criadores.</strong>
+        <span>Confere se a API está rodando em localhost:3000 e se a migration de criadores já foi aplicada.</span>
+      </div>
+    }
+
+    @default {
+      @if (creators().length) {
+        <ul class="grid">
+          @for (c of creators(); track c.slug) {
+            <li class="card">
+              <div class="card__banner" aria-hidden="true"></div>
+              <div class="card__body">
+                @if (c.avatar_url) {
+                  <img class="avatar" [src]="c.avatar_url" [alt]="'Foto de ' + c.name" width="76" height="76" loading="lazy" />
+                } @else {
+                  <span class="avatar avatar--initials" aria-hidden="true">{{ c.initials }}</span>
+                }
+
+                <h3 class="card__name">{{ c.name }}</h3>
+                @if (c.tags.length) {
+                  <ul class="card__tags">@for (t of c.tags; track t) { <li>{{ t }}</li> }</ul>
+                }
+
+                @if (c.bio_md) {
+                  <app-markdown class="card__bio" [source]="c.bio_md" />
+                }
+              </div>
+
+              <ul class="links">
+                @for (l of c.links; track l.platform) {
+                  <li>
+                    <a [class]="'link link--' + l.platform" [href]="l.url" target="_blank" rel="noopener noreferrer">
+                      {{ l.label }}
+                      <span class="sr-only">(abre em nova aba)</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="empty">
+          <ul class="grid grid--ghost" aria-hidden="true">
+            @for (g of ghosts; track g) {
+              <li class="card card--ghost">
+                <span class="avatar avatar--ghost"></span>
+                <span class="ghost-line ghost-line--name"></span>
+                <span class="ghost-line"></span>
+                <span class="ghost-line ghost-line--short"></span>
+              </li>
+            }
+          </ul>
+          <div class="empty__text">
+            <h3>A lista está sendo montada</h3>
+            <p>
+              Faz live ou vídeo de Deadlock em português? Ou conhece alguém que faz?
+              Em breve vai dar para indicar criadores direto por aqui.
+            </p>
+          </div>
+        </div>
+      }
+    }
+  }
+
+  <p class="note">
+    Os perfis aparecem com autorização dos criadores. Quer entrar, sair da lista ou atualizar seus links? Fale com a gente.
+  </p>
+</section>

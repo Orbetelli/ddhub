@@ -1,5 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { Markdown } from '../../../shared/markdown/markdown';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
@@ -20,7 +22,7 @@ type LoadState =
   | { status: 'error' }
   | { status: 'ok'; hero: HeroData };
 
-type Tab = 'overview' | 'abilities' | 'items' | 'lore';
+type Tab = 'overview' | 'guide' | 'abilities' | 'items' | 'lore';
 
 interface StatView {
   label: string;
@@ -54,7 +56,7 @@ function plainText(value: unknown): string {
 
 @Component({
   selector: 'app-hero-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, Markdown],
   templateUrl: './hero-detail.html',
   styleUrl: './hero-detail.scss',
 })
@@ -70,6 +72,7 @@ export class HeroDetail {
   protected readonly tab = signal<Tab>('overview');
   protected readonly tabs: { id: Tab; label: string }[] = [
     { id: 'overview', label: 'Visão geral' },
+    { id: 'guide', label: 'Como jogar' },
     { id: 'abilities', label: 'Habilidades' },
     { id: 'items', label: 'Itens populares' },
     { id: 'lore', label: 'História' },
@@ -116,6 +119,19 @@ export class HeroDetail {
       })),
   );
 
+  /** Seções do guia "Como jogar" que têm texto, na ordem da partida. */
+  protected readonly guideSections = computed(() => {
+    const g = this.hero()?.guide;
+    if (!g) return [];
+    return [
+      { id: 'lane', title: 'Fase de lane', md: g.lane_md },
+      { id: 'early', title: 'Início de jogo', md: g.early_md },
+      { id: 'mid', title: 'Meio de jogo', md: g.mid_md },
+      { id: 'late', title: 'Fim de jogo', md: g.late_md },
+      { id: 'combos', title: 'Combos', md: g.combos_md },
+    ].filter((s): s is { id: string; title: string; md: string } => !!s.md?.trim());
+  });
+
   protected readonly popularPhases = computed(() => {
     const p = this.hero()?.popular;
     if (!p) return [];
@@ -125,6 +141,10 @@ export class HeroDetail {
       { label: 'Fim de jogo', items: p.late },
     ].filter((phase) => phase.items.length > 0);
   });
+
+  protected scrollTo(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   protected slotClass(item: PopularItem): string {
     return item.slot ? `slot--${item.slot}` : '';

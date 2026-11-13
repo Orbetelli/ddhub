@@ -2,8 +2,10 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 
 import { SupabaseService } from '../supabase/supabase.service.js';
+import { MemoryCache } from '../cache/memory-cache.service.js';
 import { DeadlockApiClient } from './deadlock-api.client.js';
-import { mapHeroAbilities, mapHeroes, mapItems } from './game-mappers.js';
+import { asList, mapHeroAbilities, mapHeroes, mapItems, mapNpcs, pickTopLevelIcons } from './game-mappers.js';
+import type { ApiNpc } from './deadlock.types.js';
 
 export interface SyncResult {
   runId: string;
@@ -11,6 +13,7 @@ export interface SyncResult {
   selectableHeroes: number;
   items: number;
   abilities: number;
+  npcs: number;
   durationMs: number;
 }
 
@@ -24,6 +27,7 @@ export class GameSyncService implements OnApplicationBootstrap {
   constructor(
     private readonly api: DeadlockApiClient,
     private readonly supabase: SupabaseService,
+    private readonly cache: MemoryCache,
   ) {}
 
   /** Com SYNC_ON_BOOT=true, sincroniza ao subir a API (útil no primeiro uso). */
@@ -81,12 +85,19 @@ export class GameSyncService implements OnApplicationBootstrap {
       const abilities = mapHeroAbilities(heroesPt, itemIdByClass);
       await this.upsertInChunks('hero_abilities', abilities, 'hero_id,slot');
 
+      // 4) NPCs, mapa e ícones (imagens do guia). Se falhar, não derruba o sync todo.
+      const npcCount = await this.syncAssets().catch((err) => {
+        this.logger.warn(`Assets (NPCs/mapa/ícones) não sincronizados: ${String(err)}`);
+        return 0;
+      });
+
       const result: SyncResult = {
         runId: run.id as string,
         heroes: heroes.length,
         selectableHeroes: heroes.filter((h) => h.is_selectable).length,
         items: items.length,
         abilities: abilities.length,
+        npcs: npcCount,
         durationMs: Date.now() - started,
       };
 
@@ -96,8 +107,10 @@ export class GameSyncService implements OnApplicationBootstrap {
         .eq('id', run.id);
 
       this.logger.log(
-        `Sync ok: ${result.heroes} heróis (${result.selectableHeroes} jogáveis), ${result.items} itens, ${result.abilities} habilidades em ${result.durationMs} ms`,
+        `Sync ok: ${result.heroes} heróis (${result.selectableHeroes} jogáveis), ${result.items} itens, ${result.abilities} habilidades, ${result.npcs} NPCs em ${result.durationMs} ms`,
       );
+      // Dados novos: descarta o que estava em cache
+      this.cache.clear();
       return result;
     } catch (err) {
       await db
@@ -108,6 +121,37 @@ export class GameSyncService implements OnApplicationBootstrap {
     } finally {
       this.running = false;
     }
+  }
+
+  /** NPCs + mapa + ícones. Devolve quantos NPCs foram gravados. */
+  private async syncAssets(): Promise<number> {
+    const [npcsPt, npcsEn, map, icons] = await Promise.all([
+      this.api.getNpcUnits('brazilian'),
+      this.api.getNpcUnits('english'),
+      this.api.getMap(),
+      this.api.getIcons(),
+    ]);
+
+    const npcs = mapNpcs(asList<ApiNpc>(npcsPt), asList<ApiNpc>(npcsEn));
+    await this.upsertInChunks('npcs', npcs, 'id');
+
+    const now = new Date().toISOString();
+    const assets = [
+      {
+        key: 'map',
+        data: {
+          radius: map.radius ?? null,
+          images: map.images ?? {},
+          objective_positions: map.objective_positions ?? {},
+          neutral_camps: map.neutral_camps ?? null,
+        },
+        synced_at: now,
+      },
+      { key: 'icons', data: pickTopLevelIcons(icons), synced_at: now },
+    ];
+    await this.upsertInChunks('game_assets', assets, 'key');
+
+    return npcs.length;
   }
 
   private async upsertInChunks(table: string, rows: object[], onConflict: string): Promise<void> {

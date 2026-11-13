@@ -1,0 +1,255 @@
+:host {
+  display: block;
+  padding-bottom: 56px;
+}
+
+.item {
+  --slot: var(--accent);
+  padding-top: 20px;
+
+  &[data-slot='weapon'] { --slot: #e8913a; }
+  &[data-slot='vitality'] { --slot: #6fcf5a; }
+  &[data-slot='spirit'] { --slot: #b77cf0; }
+}
+
+.status {
+  padding-top: 32px;
+  color: var(--muted);
+
+  &--error { color: var(--live); }
+}
+
+.back {
+  font-size: 13px;
+  color: var(--accent-soft);
+}
+
+// ------- cabeçalho -------
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  margin: 12px 0 20px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--slot) 14%, #0a0a0a);
+  border-bottom: 3px solid var(--slot);
+}
+
+.head__icon {
+  width: 96px;
+  height: 96px;
+  padding: 10px;
+  object-fit: contain;
+  background: color-mix(in srgb, var(--slot) 28%, #111);
+  border: 2px solid var(--slot);
+}
+
+.head__text {
+  flex: 1 1 280px;
+}
+
+.head__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--text-strong);
+}
+
+.head__alt {
+  margin: 4px 0 0;
+  font-family: var(--font-cond);
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  padding: 2px 10px;
+  border: 1px solid #333;
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+
+  &--slot {
+    background: var(--slot);
+    border-color: var(--slot);
+    color: var(--bg);
+  }
+
+  &--cost { color: var(--cream); border-color: var(--cream); }
+}
+
+// ------- corpo -------
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 860px) { grid-template-columns: 1fr; }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.box {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.box__title {
+  margin: 0 0 12px;
+  font-family: var(--font-cond);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-strong);
+}
+
+.prose {
+  margin: 0 0 10px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 6px 10px;
+    background: var(--surface-head);
+    border-left: 3px solid var(--slot);
+    font-size: 14px;
+  }
+}
+
+.sub {
+  margin: 12px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+
+  &:first-of-type { margin-top: 0; }
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  --c: var(--faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: var(--surface-head);
+  border: 1px solid #2c2c2c;
+  border-left: 3px solid var(--c);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+
+  &[data-slot='weapon'] { --c: #e8913a; }
+  &[data-slot='vitality'] { --c: #6fcf5a; }
+  &[data-slot='spirit'] { --c: #b77cf0; }
+
+  &:hover { border-color: var(--c); }
+
+  img { width: 32px; height: 32px; object-fit: contain; }
+  small { color: var(--cream); font-weight: 500; }
+}
+
+// ------- quem mais compra -------
+.buyers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.buyer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-top: 1px solid var(--row);
+  color: var(--text);
+  text-decoration: none;
+
+  &:hover { background: var(--row); }
+
+  img { width: 36px; height: 36px; object-fit: cover; }
+}
+
+.buyer__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.buyer__num {
+  width: 52px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+
+  &--win { color: var(--win); }
+}
+
+.legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+  margin: 6px 0 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--faint);
+
+  span { width: 52px; text-align: right; }
+}
+
+.credit {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--faint);
+}

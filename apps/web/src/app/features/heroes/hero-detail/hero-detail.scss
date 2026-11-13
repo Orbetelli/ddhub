@@ -329,6 +329,10 @@
   border-top: 1px solid var(--row);
   border-left: 3px solid transparent;
   padding-left: 6px;
+  color: var(--text);
+  text-decoration: none;
+
+  &:hover { background: var(--row); }
 
   img { width: 32px; height: 32px; }
 
@@ -362,4 +366,56 @@
 
 .lore .prose {
   font-size: 17px;
+}
+
+// ============ Como jogar ============
+.link-btn {
+  margin-top: 14px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-soft);
+  cursor: pointer;
+
+  &:hover { color: var(--accent); }
+}
+
+.guide {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 860px;
+}
+
+.guide__summary {
+  border-left: 3px solid var(--hero-color);
+}
+
+.guide__toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  a {
+    padding: 4px 10px;
+    border: 1px solid #2c2c2c;
+    font-family: var(--font-cond);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+
+    &:hover {
+      border-color: var(--hero-color);
+      color: var(--text-strong);
+    }
+  }
+}
+
+.guide__section {
+  scroll-margin-top: 80px;
 }

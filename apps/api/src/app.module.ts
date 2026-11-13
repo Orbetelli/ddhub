@@ -6,8 +6,10 @@ import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { SupabaseModule } from './supabase/supabase.module.js';
+import { CacheModule } from './cache/cache.module.js';
 import { GameDataModule } from './game-data/game-data.module.js';
 import { LearnModule } from './learn/learn.module.js';
+import { CreatorsModule } from './creators/creators.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -24,8 +26,10 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     }),
 
     SupabaseModule,
+    CacheModule,
     GameDataModule,
     LearnModule,
+    CreatorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

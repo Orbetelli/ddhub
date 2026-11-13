@@ -1,0 +1,117 @@
+@switch (state().status) {
+  @case ('loading') {
+    <p class="container status">Carregando item…</p>
+  }
+  @case ('not-found') {
+    <section class="container status">
+      <h1>Item não encontrado</h1>
+      <a routerLink="/itens" class="back">« Ver todos os itens</a>
+    </section>
+  }
+  @case ('error') {
+    <p class="container status status--error">
+      Não foi possível carregar o item. Confere se a API está rodando em localhost:3000.
+    </p>
+  }
+}
+
+@if (item(); as it) {
+  <article class="container item" [attr.data-slot]="it.slot">
+    <a routerLink="/itens" class="back">« Itens</a>
+
+    <header class="head">
+      @if (it.shop_image_url ?? it.image_url; as img) {
+        <img class="head__icon" [src]="img" alt="" width="96" height="96" />
+      }
+      <div class="head__text">
+        <h1 class="head__name">{{ names.primary(it.name, it.name_en) }}</h1>
+        @if (names.secondary(it.name, it.name_en); as other) {
+          <p class="head__alt">{{ other }}</p>
+        }
+        <ul class="badges">
+          @if (it.slot) { <li class="badge badge--slot">{{ slotLabel[it.slot] }}</li> }
+          @if (it.tier) { <li class="badge">Tier {{ it.tier }}</li> }
+          @if (it.cost !== null) { <li class="badge badge--cost">{{ it.cost.toLocaleString('pt-BR') }} almas</li> }
+          <li class="badge">{{ it.is_active_item ? 'Ativo' : 'Passivo' }}</li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="main">
+        <section class="box">
+          <h2 class="box__title">O que faz</h2>
+          @for (p of paragraphs(); track $index) {
+            <p class="prose">{{ p }}</p>
+          } @empty {
+            <p class="note">Descrição ainda não disponível.</p>
+          }
+
+          @if (stats().length) {
+            <ul class="stats">
+              @for (s of stats(); track s) { <li>{{ s }}</li> }
+            </ul>
+          }
+        </section>
+
+        @if (it.components.length || it.builds_into.length) {
+          <section class="box">
+            <h2 class="box__title">Caminho de compra</h2>
+            @if (it.components.length) {
+              <h3 class="sub">Feito a partir de</h3>
+              <ul class="links">
+                @for (c of it.components; track c.slug) {
+                  <li>
+                    <a class="link" [attr.data-slot]="c.slot" [routerLink]="['/itens', c.slug]">
+                      @if (c.image_url) { <img [src]="c.image_url" alt="" width="32" height="32" loading="lazy" /> }
+                      <span>{{ names.primary(c.name, c.name_en) }}</span>
+                      @if (c.cost !== null) { <small>{{ c.cost.toLocaleString('pt-BR') }}</small> }
+                    </a>
+                  </li>
+                }
+              </ul>
+              <p class="note">O valor do componente é descontado quando você compra este item.</p>
+            }
+            @if (it.builds_into.length) {
+              <h3 class="sub">Evolui para</h3>
+              <ul class="links">
+                @for (c of it.builds_into; track c.slug) {
+                  <li>
+                    <a class="link" [attr.data-slot]="c.slot" [routerLink]="['/itens', c.slug]">
+                      @if (c.image_url) { <img [src]="c.image_url" alt="" width="32" height="32" loading="lazy" /> }
+                      <span>{{ names.primary(c.name, c.name_en) }}</span>
+                      @if (c.cost !== null) { <small>{{ c.cost.toLocaleString('pt-BR') }}</small> }
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      </div>
+
+      <aside class="box side">
+        <h2 class="box__title">Quem mais compra</h2>
+        @if (it.top_heroes.length) {
+          <ul class="buyers">
+            @for (h of it.top_heroes; track h.slug) {
+              <li>
+                <a class="buyer" [routerLink]="['/herois', h.slug]">
+                  @if (h.image) { <img [src]="h.image" alt="" width="36" height="36" loading="lazy" /> }
+                  <span class="buyer__name">{{ names.primary(h.name, h.name_en) }}</span>
+                  <span class="buyer__num" title="Taxa de escolha">{{ h.pick_pct }}%</span>
+                  <span class="buyer__num buyer__num--win" title="Taxa de vitória">{{ h.winrate_pct }}%</span>
+                </a>
+              </li>
+            }
+          </ul>
+          <p class="legend"><span>escolha</span><span>vitória</span></p>
+        } @else {
+          <p class="note">Este item não aparece entre os mais comprados de nenhum herói.</p>
+        }
+      </aside>
+    </div>
+
+    <p class="credit">Texto oficial do jogo · Valve. Dados de compra e imagens: Deadlock API.</p>
+  </article>
+}

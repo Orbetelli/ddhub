@@ -1,0 +1,108 @@
+<section class="container page">
+  <header class="page__head">
+    <h1 class="page__title">Mapa</h1>
+    <p class="page__intro">
+      O mapa de Deadlock com os objetivos de cada lane, o Chefe do Meio e os acampamentos neutros.
+      Clique num ponto para ver o que é e quando importa.
+    </p>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="status">Carregando mapa…</p>
+    }
+    @case ('error') {
+      <p class="status status--error">Não foi possível carregar o mapa. Confere se a API está rodando em localhost:3000.</p>
+    }
+  }
+
+  @if (data(); as d) {
+    <div class="layout">
+      <!-- ============ Mapa ============ -->
+      <div class="board">
+        @if (d.views.length) {
+          <div class="views" role="group" aria-label="Visão do mapa">
+            <button type="button" class="chip" [attr.aria-pressed]="view() === 'mapa'" (click)="view.set('mapa')">Superfície</button>
+            @for (v of d.views; track v.key) {
+              <button type="button" class="chip" [attr.aria-pressed]="view() === v.key" (click)="view.set(v.key)">{{ v.label }}</button>
+            }
+          </div>
+        }
+
+        <div class="board__frame">
+          @if (viewImage(); as img) {
+            <img class="board__img" [src]="img" [alt]="view() === 'mapa' ? 'Minimapa de Deadlock' : 'Túneis do mapa'" />
+          } @else {
+            <div class="board__empty">Imagem do mapa ainda não sincronizada.</div>
+          }
+
+          @for (m of visible(); track m.id) {
+            <button
+              type="button"
+              [class]="markerClass(m)"
+              [style.left.%]="m.x * 100"
+              [style.top.%]="m.y * 100"
+              [attr.aria-label]="ariaLabel(m)"
+              [attr.aria-pressed]="m.id === selectedId()"
+              [title]="ariaLabel(m)"
+              (click)="select(m)"
+            >
+              @if (m.icon) { <img [src]="m.icon" alt="" /> }
+            </button>
+          }
+        </div>
+
+        @if (view() !== 'mapa') {
+          <p class="note">Nos túneis os marcadores ficam escondidos: as posições dos dados valem para a superfície.</p>
+        }
+      </div>
+
+      <!-- ============ Painel ============ -->
+      <aside class="side">
+        @if (selected(); as m) {
+          <section class="box detail" [class]="'detail--' + (m.team === null ? 'neutral' : 't' + m.team)">
+            <button type="button" class="close" (click)="selectedId.set(null)" aria-label="Fechar">×</button>
+            <h2 class="detail__title">{{ title(m) }}</h2>
+            @if (laneLabel(m); as lane) {
+              <p class="detail__team">{{ lane }}</p>
+            }
+            @if (teamLabel(m); as team) {
+              <p class="detail__team">Lado de {{ team }}</p>
+            }
+            <p class="prose">{{ info[m.kind].text }}</p>
+            @if (info[m.kind].learn; as link) {
+              <a class="more" [routerLink]="link">Ler no guia »</a>
+            }
+            @if (m.kind === 'outro' || m.kind === 'acampamento') {
+              <p class="note">Nome nos dados do jogo: <code>{{ m.source }}</code></p>
+            }
+          </section>
+        }
+
+        <section class="box">
+          <h2 class="box__title">Camadas</h2>
+          <ul class="layers">
+            @for (l of layers(); track l.kind) {
+              <li>
+                <label class="layer">
+                  <input type="checkbox" [checked]="!hidden().has(l.kind)" (change)="toggleLayer(l.kind)" />
+                  <span [class]="'swatch swatch--' + l.kind"></span>
+                  <span class="layer__name">{{ l.label }}</span>
+                  <span class="layer__count">{{ l.count }}</span>
+                </label>
+              </li>
+            } @empty {
+              <li class="note">Nenhum marcador nos dados do mapa ainda. Rode o sync da API.</li>
+            }
+          </ul>
+          <p class="teams">
+            <span class="team team--t0">The Hidden King</span>
+            <span class="team team--t1">The Archmother</span>
+          </p>
+        </section>
+      </aside>
+    </div>
+
+    <p class="credit">Imagens e posições: Deadlock API · Deadlock é marca da Valve.</p>
+  }
+</section>

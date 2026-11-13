@@ -1,0 +1,299 @@
+:host {
+  --t0: #f0a23a;      // The Hidden King
+  --t1: #5aa7ff;      // The Archmother
+  --neutral: var(--cream);
+}
+
+.page {
+  padding-top: 24px;
+  padding-bottom: 56px;
+}
+
+.page__title {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--accent);
+}
+
+.page__intro {
+  max-width: 720px;
+  color: var(--muted);
+}
+
+.status {
+  padding: 24px 0;
+  color: var(--muted);
+
+  &--error { color: var(--live); }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+// ============ Mapa ============
+.views {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #2c2c2c;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+}
+
+.board__frame {
+  position: relative;
+  max-width: 820px;
+  margin: 0 auto;
+  background: #050505;
+  border: 1px solid var(--border);
+}
+
+.board__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.board__empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  color: var(--faint);
+}
+
+// ------- marcadores -------
+.marker {
+  --c: var(--neutral);
+  --s: 14px;
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  padding: 0;
+  transform: translate(-50%, -50%);
+  background: var(--c);
+  border: 2px solid #0a0a0a;
+  box-shadow: 0 0 0 1px var(--c);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+
+  &:hover,
+  &:focus-visible { transform: translate(-50%, -50%) scale(1.35); z-index: 2; }
+
+  &.is-selected {
+    z-index: 3;
+    transform: translate(-50%, -50%) scale(1.5);
+    box-shadow: 0 0 0 2px #fff, 0 0 12px 2px var(--c);
+  }
+
+  &--t0 { --c: var(--t0); }
+  &--t1 { --c: var(--t1); }
+
+  // formas por tipo
+  &--guardiao { border-radius: 2px; }
+  &--andador { --s: 16px; border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); }
+  &--andador:hover, &--andador:focus-visible { transform: translate(-50%, -50%) rotate(45deg) scale(1.35); }
+  &--andador.is-selected { transform: translate(-50%, -50%) rotate(45deg) scale(1.5); }
+  &--guardiao-base { --s: 12px; border-radius: 50%; }
+  &--santuario { --s: 16px; border-radius: 50% 50% 2px 2px; }
+  &--patrono { --s: 24px; border-radius: 50%; border-width: 3px; }
+  &--chefe-meio { --s: 22px; --c: #ff5a4d; border-radius: 50%; }
+  &--base { --s: 20px; border-radius: 4px; border-width: 3px; }
+  &--acampamento { --s: 10px; --c: var(--neutral); border-radius: 50%; opacity: 0.9; }
+  &--acampamento.marker--medio { --s: 12px; }
+  &--acampamento.marker--grande { --s: 15px; --c: #c7a6ff; }
+  &--acampamento.marker--cofre { --s: 16px; --c: #ffd36b; }
+
+  // Acampamento com ícone oficial do minimapa: mostra o ícone em vez da bolinha
+  &:has(img) {
+    --s: 22px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    opacity: 1;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+
+  &:has(img).is-selected { filter: drop-shadow(0 0 4px #fff); box-shadow: none; }
+  &--outro { --s: 10px; --c: #888; border-radius: 50%; }
+}
+
+// ============ Painel ============
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.box {
+  position: relative;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.box__title {
+  margin: 0 0 10px;
+  font-family: var(--font-cond);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail {
+  border-top: 3px solid var(--accent);
+
+  &--t0 { border-top-color: var(--t0); }
+  &--t1 { border-top-color: var(--t1); }
+  &--neutral { border-top-color: var(--neutral); }
+}
+
+.detail__title {
+  margin: 0;
+  padding-right: 24px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-strong);
+}
+
+.detail__team {
+  margin: 2px 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 0 4px;
+  background: none;
+  border: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover { color: var(--text-strong); }
+}
+
+.prose {
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+
+.more {
+  font-weight: 600;
+  color: var(--accent-soft);
+}
+
+.layers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  cursor: pointer;
+
+  input { accent-color: var(--accent); }
+}
+
+.layer__name { flex: 1 1 auto; }
+
+.layer__count {
+  font-size: 12px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  background: var(--t0);
+  border-radius: 2px;
+
+  &--andador { transform: rotate(45deg); }
+  &--guardiao-base,
+  &--patrono { border-radius: 50%; }
+  &--santuario { border-radius: 50% 50% 2px 2px; }
+  &--chefe-meio { background: #ff5a4d; border-radius: 50%; }
+  &--base { border-radius: 4px; }
+  &--acampamento { background: var(--neutral); border-radius: 50%; }
+  &--outro { background: #888; border-radius: 50%; }
+}
+
+.teams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--row);
+  font-size: 13px;
+}
+
+.team::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.team--t0::before { background: var(--t0); }
+.team--t1::before { background: var(--t1); }
+
+.note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--faint);
+
+  code { color: var(--cream); }
+}
+
+.credit {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--faint);
+}

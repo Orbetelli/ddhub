@@ -41,6 +41,26 @@ export interface ApiHero {
   [key: string]: unknown;
 }
 
+/** /v1/assets/npc-units — só os campos que usamos. */
+export interface ApiNpc {
+  id: number;
+  class_name: string;
+  name?: string;
+  image?: string;
+  image_webp?: string;
+  images?: { image?: string; image_webp?: string };
+  [key: string]: unknown;
+}
+
+/** /v1/assets/map */
+export interface ApiMap {
+  radius?: number;
+  images?: Record<string, string>;
+  objective_positions?: Record<string, { left_relative: number; top_relative: number }>;
+  neutral_camps?: unknown;
+  [key: string]: unknown;
+}
+
 export type ApiItemType = 'ability' | 'weapon' | 'upgrade';
 
 export interface ApiItem {

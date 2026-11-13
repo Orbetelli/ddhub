@@ -33,15 +33,41 @@
     </button>
 
     <nav id="nav-principal" class="nav" [class.nav--open]="menuOpen()" aria-label="Principal">
-      @for (item of nav; track item.path) {
-        <a
-          class="nav__link"
-          [routerLink]="item.path"
-          routerLinkActive="nav__link--active"
-          [routerLinkActiveOptions]="{ exact: item.exact === true }"
-          (click)="closeMenu()"
-          >{{ item.label }}</a
-        >
+      @for (entry of nav; track entry.label) {
+        @if (isGroup(entry)) {
+          <div class="group" [class.group--open]="openGroup() === entry.id">
+            <button
+              type="button"
+              class="nav__link group__btn"
+              [class.nav__link--active]="activeGroup() === entry.id"
+              [attr.aria-expanded]="openGroup() === entry.id"
+              [attr.aria-controls]="'menu-' + entry.id"
+              (click)="toggleGroup(entry.id)"
+            >
+              {{ entry.label }}
+              <svg class="group__caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+            </button>
+            <div class="drop" [id]="'menu-' + entry.id">
+              @for (link of entry.links; track link.path) {
+                <a class="drop__link" [routerLink]="link.path" routerLinkActive="drop__link--active" (click)="closeMenu()">
+                  <span class="drop__label">{{ link.label }}</span>
+                  @if (link.hint) { <span class="drop__hint">{{ link.hint }}</span> }
+                </a>
+              }
+            </div>
+          </div>
+        } @else {
+          <a
+            class="nav__link"
+            [routerLink]="entry.path"
+            routerLinkActive="nav__link--active"
+            [routerLinkActiveOptions]="{ exact: entry.exact === true }"
+            (click)="closeMenu()"
+            >{{ entry.label }}</a
+          >
+        }
       }
     </nav>
 

@@ -1,0 +1,227 @@
+:host {
+  --weapon: #e8913a;
+  --vitality: #6fcf5a;
+  --spirit: #b77cf0;
+}
+
+.page {
+  padding-top: 24px;
+  padding-bottom: 56px;
+}
+
+.page__title {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--accent);
+}
+
+.page__intro {
+  max-width: 720px;
+  color: var(--muted);
+}
+
+// ------- filtros -------
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.filters__search {
+  flex: 1 1 260px;
+
+  input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #2c2c2c;
+    border-radius: 2px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  --c: var(--accent);
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #2c2c2c;
+  border-bottom: 3px solid var(--c);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+
+  &--weapon { --c: var(--weapon); }
+  &--vitality { --c: var(--vitality); }
+  &--spirit { --c: var(--spirit); }
+
+  &:hover:not(:disabled) { color: var(--text); }
+
+  &[aria-pressed='true'] {
+    background: var(--c);
+    border-color: var(--c);
+    color: var(--bg);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+
+  input { accent-color: var(--accent); }
+}
+
+.status {
+  padding: 24px 0;
+  color: var(--muted);
+
+  &--error { color: var(--live); }
+}
+
+.count {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+// ------- loja: colunas por tier -------
+.shop {
+  --slot: var(--accent);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+
+  &[data-slot='weapon'] { --slot: var(--weapon); }
+  &[data-slot='vitality'] { --slot: var(--vitality); }
+  &[data-slot='spirit'] { --slot: var(--spirit); }
+}
+
+.tier {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--slot);
+}
+
+.tier__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--surface-head);
+  font-family: var(--font-cond);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tier__cost {
+  font-size: 13px;
+  color: var(--cream);
+}
+
+.tier__items {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.tile {
+  --c: var(--faint);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-left: 3px solid var(--c);
+  color: var(--text);
+  text-decoration: none;
+
+  &--weapon { --c: var(--weapon); }
+  &--vitality { --c: var(--vitality); }
+  &--spirit { --c: var(--spirit); }
+
+  &:hover {
+    background: var(--row);
+    color: var(--text-strong);
+  }
+
+  img {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    padding: 4px;
+    object-fit: contain;
+    background: color-mix(in srgb, var(--c) 22%, #111);
+  }
+}
+
+.tile__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tile__active {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--cream);
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.empty {
+  padding: 24px 0;
+  color: var(--muted);
+}
+
+.link-btn {
+  margin-left: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-soft);
+  cursor: pointer;
+}
+
+.credit {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--faint);
+}

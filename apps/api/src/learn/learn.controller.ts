@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { SupabaseService } from '../supabase/supabase.service.js';
+import { MemoryCache, TTL } from '../cache/memory-cache.service.js';
 
 const SLUG = /^[a-z0-9-]{1,60}$/;
 
@@ -21,17 +22,23 @@ interface ChapterSummary {
 /** Guia "Aprender a jogar" — só capítulos publicados. */
 @Controller('learn')
 export class LearnController {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly cache: MemoryCache,
+  ) {}
 
   @Get()
-  async list(): Promise<ChapterSummary[]> {
+  list(): Promise<ChapterSummary[]> {
     return this.publishedSummaries();
   }
 
   @Get(':slug')
-  async get(@Param('slug') slug: string) {
+  get(@Param('slug') slug: string) {
     if (!SLUG.test(slug)) throw new BadRequestException('Slug inválido.');
+    return this.cache.get(`learn:${slug}`, TTL.content, () => this.loadChapter(slug));
+  }
 
+  private async loadChapter(slug: string) {
     const { data, error } = await this.supabase.db
       .from('learn_chapters')
       .select('slug, position, title, summary, body_md, updated_at, published_at')
@@ -59,7 +66,11 @@ export class LearnController {
     };
   }
 
-  private async publishedSummaries(): Promise<ChapterSummary[]> {
+  private publishedSummaries(): Promise<ChapterSummary[]> {
+    return this.cache.get('learn', TTL.content, () => this.loadSummaries());
+  }
+
+  private async loadSummaries(): Promise<ChapterSummary[]> {
     const { data, error } = await this.supabase.db
       .from('learn_chapters')
       .select('slug, position, title, summary')

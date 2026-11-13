@@ -1,7 +1,7 @@
 // Funções puras que transformam o JSON da Deadlock API em linhas do banco.
 // Sem dependência de Nest/Supabase → fáceis de testar.
 
-import type { ApiHero, ApiItem } from './deadlock.types.js';
+import type { ApiHero, ApiItem, ApiNpc } from './deadlock.types.js';
 
 export interface HeroRow {
   id: number;
@@ -177,6 +177,66 @@ export function mapItems(pt: ApiItem[], en: ApiItem[], now = new Date()): ItemRo
         synced_at: now.toISOString(),
       };
     });
+}
+
+export interface NpcRow {
+  id: number;
+  class_name: string;
+  slug: string;
+  name: string | null;
+  name_en: string | null;
+  image_url: string | null;
+  synced_at: string;
+}
+
+/** A API às vezes entrega lista, às vezes objeto indexado. */
+export function asList<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') return Object.values(data) as T[];
+  return [];
+}
+
+function npcImage(n: ApiNpc): string | null {
+  return n.images?.image_webp ?? n.image_webp ?? n.images?.image ?? n.image ?? null;
+}
+
+/**
+ * NPCs úteis pro site: só os que têm nome oficial ou imagem
+ * (monstros da jungle, Guardião, Andador, Patronos...).
+ * "neutral_plant_strong" → slug "plant-strong"; "npc_boss_tier3" → "boss-tier3".
+ */
+export function mapNpcs(pt: ApiNpc[], en: ApiNpc[], now = new Date()): NpcRow[] {
+  const enById = new Map(en.map((n) => [n.id, n]));
+  const usedSlugs = new Set<string>();
+
+  return pt
+    .filter((n) => Number.isInteger(n.id) && typeof n.class_name === 'string')
+    .filter((n) => !!n.name || !!npcImage(n))
+    .map((n) => {
+      let slug = slugify(n.class_name.replace(/^(npc_|neutral_)/, ''));
+      if (!slug || usedSlugs.has(slug)) slug = `${slug || 'npc'}-${n.id}`;
+      usedSlugs.add(slug);
+      const e = enById.get(n.id);
+      return {
+        id: n.id,
+        class_name: n.class_name,
+        slug,
+        name: n.name ?? null,
+        name_en: e?.name ?? null,
+        image_url: npcImage(n),
+        synced_at: now.toISOString(),
+      };
+    });
+}
+
+/** Ícones: guarda só os arquivos do primeiro nível ("neutral_small.png" → URL). */
+export function pickTopLevelIcons(icons: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!icons || typeof icons !== 'object') return out;
+  for (const [key, value] of Object.entries(icons as Record<string, unknown>)) {
+    if (typeof value === 'string' && /^https?:\/\//.test(value)) out[key] = value;
+  }
+  return out;
 }
 
 /** signature1..4 do herói → linhas de hero_abilities (ignora habilidades que não existem nos itens). */
