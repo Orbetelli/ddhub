@@ -1,0 +1,55 @@
+<div class="utility">
+  <div class="container utility__inner">
+    <span>A casa da comunidade brasileira de Deadlock</span>
+    <span class="utility__right">
+      <span class="names-toggle" role="group" aria-label="Idioma dos nomes de heróis e itens">
+        <span class="names-toggle__label">Nomes:</span>
+        <button type="button" class="names-toggle__btn" [attr.aria-pressed]="!names.isEnglish()" (click)="names.set('pt')">PT</button>
+        <button type="button" class="names-toggle__btn" [attr.aria-pressed]="names.isEnglish()" (click)="names.set('en')">EN</button>
+      </span>
+      <span>Patch atual: <a routerLink="/noticias" class="utility__patch">{{ patchVersion() }}</a></span>
+    </span>
+  </div>
+</div>
+
+<header class="header">
+  <div class="container header__inner">
+    <a routerLink="/" class="brand" aria-label="DDhub — página inicial" (click)="closeMenu()">
+      <img class="brand__logo" src="brand/ddhub-logo.png" alt="" width="44" height="44" />
+      <span class="brand__name">DD<span class="brand__accent">hub</span></span>
+    </a>
+
+    <button
+      type="button"
+      class="menu-toggle"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="nav-principal"
+      (click)="toggleMenu()"
+    >
+      <span class="sr-only">Abrir menu</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+
+    <nav id="nav-principal" class="nav" [class.nav--open]="menuOpen()" aria-label="Principal">
+      @for (item of nav; track item.path) {
+        <a
+          class="nav__link"
+          [routerLink]="item.path"
+          routerLinkActive="nav__link--active"
+          [routerLinkActiveOptions]="{ exact: item.exact === true }"
+          (click)="closeMenu()"
+          >{{ item.label }}</a
+        >
+      }
+    </nav>
+
+    <div class="actions">
+      <label for="busca" class="sr-only">Buscar no DDhub</label>
+      <input id="busca" class="search" type="search" placeholder="Buscar…" />
+      <!-- O login real entra no módulo de auth (Steam / Discord) -->
+      <button type="button" class="btn-steam">Entrar com Steam</button>
+    </div>
+  </div>
+</header>

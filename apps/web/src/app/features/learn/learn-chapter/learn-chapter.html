@@ -1,0 +1,67 @@
+<div class="container layout">
+  <!-- Índice lateral (vira lista no topo no celular) -->
+  <nav class="toc" aria-label="Capítulos do guia">
+    <a routerLink="/aprender" class="toc__home">« Aprender a jogar</a>
+    <ol class="toc__list">
+      @for (c of toc(); track c.slug) {
+        <li>
+          <a
+            class="toc__link"
+            [routerLink]="['/aprender', c.slug]"
+            [class.toc__link--active]="c.slug === slug()"
+            [attr.aria-current]="c.slug === slug() ? 'page' : null"
+          >
+            <span class="toc__num">{{ c.position }}</span>
+            {{ c.title }}
+          </a>
+        </li>
+      }
+    </ol>
+  </nav>
+
+  <article class="content">
+    @switch (state().status) {
+      @case ('loading') {
+        <p class="status">Carregando capítulo…</p>
+      }
+      @case ('not-found') {
+        <h1 class="title">Capítulo não encontrado</h1>
+        <p class="status">Ele pode ter mudado de nome. Escolhe um no índice.</p>
+      }
+      @case ('error') {
+        <p class="status status--error">Não foi possível carregar o capítulo. Confere se a API está rodando.</p>
+      }
+    }
+
+    @if (chapter(); as c) {
+      <header class="head">
+        <span class="head__eyebrow">Capítulo {{ c.position }}</span>
+        <h1 class="title">{{ c.title }}</h1>
+        @if (c.summary) {
+          <p class="head__summary">{{ c.summary }}</p>
+        }
+      </header>
+
+      <app-markdown [source]="c.body_md" />
+
+      <p class="updated">Atualizado em {{ c.updated_at | date: 'dd/MM/yyyy' }}</p>
+
+      <nav class="pager" aria-label="Navegação entre capítulos">
+        @if (c.prev; as p) {
+          <a class="pager__link" [routerLink]="['/aprender', p.slug]">
+            <span class="pager__label">« Anterior</span>
+            <span class="pager__title">{{ p.title }}</span>
+          </a>
+        } @else {
+          <span></span>
+        }
+        @if (c.next; as n) {
+          <a class="pager__link pager__link--next" [routerLink]="['/aprender', n.slug]">
+            <span class="pager__label">Próximo »</span>
+            <span class="pager__title">{{ n.title }}</span>
+          </a>
+        }
+      </nav>
+    }
+  </article>
+</div>

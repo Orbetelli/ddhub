@@ -1,0 +1,89 @@
+// Estilos do texto em Markdown — tudo preso à classe .md
+.md {
+  max-width: 75ch;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text);
+
+  > :first-child { margin-top: 0; }
+
+  h2 {
+    margin: 32px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 28px;
+    text-transform: uppercase;
+    color: var(--text-strong);
+  }
+
+  h3 {
+    margin: 24px 0 8px;
+    font-family: var(--font-cond);
+    font-weight: 700;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  p { margin: 0 0 14px; }
+
+  a {
+    color: var(--accent-soft);
+    text-decoration: underline;
+  }
+
+  strong { color: var(--text-strong); }
+
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+
+  blockquote {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    color: var(--muted);
+
+    p:last-child { margin-bottom: 0; }
+  }
+
+  code {
+    padding: 1px 5px;
+    background: var(--surface-head);
+    font-size: 0.9em;
+  }
+
+  img {
+    max-width: 100%;
+    margin: 8px 0 16px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    margin: 0 0 16px;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    border-top: 1px solid var(--row);
+    text-align: left;
+  }
+
+  th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+  }
+
+  hr {
+    margin: 24px 0;
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+}

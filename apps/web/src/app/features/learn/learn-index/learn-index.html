@@ -1,0 +1,46 @@
+<section class="container page">
+  <header class="intro">
+    <h1 class="intro__title">Aprender a jogar</h1>
+    <p class="intro__text">
+      Chegou agora no Deadlock? Esse guia explica o jogo do zero, em português e sem enrolação:
+      do mapa e das lanes até o Patrono. Lê na ordem ou pula direto pro que te interessa.
+    </p>
+    <p class="intro__aside">
+      Quer saber de um herói específico? Vai em <a routerLink="/herois">Heróis</a>.
+    </p>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="status">Carregando o guia…</p>
+    }
+    @case ('error') {
+      <p class="status status--error">Não foi possível carregar o guia. Confere se a API está rodando.</p>
+    }
+  }
+
+  @if (state(); as s) {
+    @if (s.status === 'ok') {
+      @if (s.chapters.length) {
+        <ol class="chapters">
+          @for (c of s.chapters; track c.slug) {
+            <li>
+              <a class="chapter" [routerLink]="['/aprender', c.slug]">
+                <span class="chapter__num">{{ c.position }}</span>
+                <span class="chapter__body">
+                  <span class="chapter__title">{{ c.title }}</span>
+                  @if (c.summary) {
+                    <span class="chapter__summary">{{ c.summary }}</span>
+                  }
+                </span>
+                <span class="chapter__go" aria-hidden="true">»</span>
+              </a>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="status">Nenhum capítulo publicado ainda. Volta daqui a pouco!</p>
+      }
+    }
+  }
+</section>

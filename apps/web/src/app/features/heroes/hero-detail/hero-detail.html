@@ -1,0 +1,184 @@
+@switch (state().status) {
+  @case ('loading') {
+    <p class="container status">Carregando herói…</p>
+  }
+  @case ('not-found') {
+    <section class="container status">
+      <h1>Herói não encontrado</h1>
+      <a routerLink="/herois" class="back">« Ver todos os heróis</a>
+    </section>
+  }
+  @case ('error') {
+    <p class="container status status--error">
+      Não foi possível carregar o herói. Confere se a API está rodando em localhost:3000.
+    </p>
+  }
+}
+
+@if (hero(); as h) {
+  <article class="hero" [style.--hero-color]="h.color_hex ?? 'var(--accent)'">
+    <!-- ============ Banner ============ -->
+    <header class="banner">
+      @if (h.images['background_image_webp']; as bg) {
+        <img class="banner__bg" [src]="bg" alt="" />
+      }
+      <div class="container banner__inner">
+        @if (h.images['icon_hero_card_webp']; as card) {
+          <img class="banner__card" [src]="card" [alt]="'Arte de ' + h.name" width="200" height="273" />
+        }
+        <div class="banner__text">
+          <a routerLink="/herois" class="back">« Heróis</a>
+          <h1 class="banner__name">{{ names.primary(h.name, h.name_en) }}</h1>
+          @if (names.secondary(h.name, h.name_en); as other) {
+            <p class="banner__alt">{{ other }}</p>
+          }
+          @if (h.role) {
+            <p class="banner__role">{{ h.role }}</p>
+          }
+          <ul class="badges">
+            @if (h.hero_type) { <li class="badge badge--solid">{{ typeLabel[h.hero_type] }}</li> }
+            @if (h.complexity) { <li class="badge">Dificuldade: {{ complexityLabel[h.complexity] }}</li> }
+            @if (h.gun_tag) { <li class="badge">{{ h.gun_tag }}</li> }
+            @for (tag of h.tags; track tag) { <li class="badge">{{ tag }}</li> }
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ Abas ============ -->
+    <div class="container">
+      <div class="tabs" role="tablist" aria-label="Seções do herói">
+        @for (t of tabs; track t.id) {
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            [id]="'tab-' + t.id"
+            [attr.aria-selected]="tab() === t.id"
+            [attr.aria-controls]="'panel-' + t.id"
+            (click)="tab.set(t.id)"
+          >
+            {{ t.label }}
+          </button>
+        }
+      </div>
+
+      <div class="panel" role="tabpanel" [id]="'panel-' + tab()" [attr.aria-labelledby]="'tab-' + tab()">
+        @switch (tab()) {
+          @case ('overview') {
+            <div class="overview">
+              <section class="box">
+                <h2 class="box__title">Estilo de jogo</h2>
+                <p class="prose">{{ h.playstyle ?? 'Descrição ainda não disponível.' }}</p>
+
+                @if (h.guide?.strengths?.length || h.guide?.weaknesses?.length) {
+                  <div class="pros-cons">
+                    <div>
+                      <h3>Pontos fortes</h3>
+                      <ul>@for (s of h.guide?.strengths ?? []; track s) { <li>{{ s }}</li> }</ul>
+                    </div>
+                    <div>
+                      <h3>Pontos fracos</h3>
+                      <ul>@for (w of h.guide?.weaknesses ?? []; track w) { <li>{{ w }}</li> }</ul>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="note">O guia “Como jogar” deste herói ainda está sendo escrito pela comunidade.</p>
+                }
+              </section>
+
+              <section class="box">
+                <h2 class="box__title">Atributos iniciais</h2>
+                <dl class="stats">
+                  @for (s of stats(); track s.label) {
+                    <div class="stats__row">
+                      <dt>{{ s.label }}</dt>
+                      <dd>{{ s.value }}</dd>
+                    </div>
+                  }
+                </dl>
+                @if (h.images['weapon_image']; as gun) {
+                  <img class="weapon" [src]="gun" alt="Arma do herói" loading="lazy" />
+                }
+              </section>
+            </div>
+          }
+
+          @case ('abilities') {
+            <ol class="abilities">
+              @for (a of abilities(); track a.slot) {
+                <li class="ability">
+                  <div class="ability__icon">
+                    @if (a.item.image_url) { <img [src]="a.item.image_url" alt="" width="56" height="56" loading="lazy" /> }
+                    <span class="ability__key">{{ a.slot === 4 ? 'ULT' : a.slot }}</span>
+                  </div>
+                  <div class="ability__body">
+                    <h3 class="ability__name">
+                      {{ names.primary(a.item.name, a.item.name_en) }}
+                      @if (names.secondary(a.item.name, a.item.name_en); as other) {
+                        <span class="ability__alt">{{ other }}</span>
+                      }
+                    </h3>
+                    @if (a.text) { <p class="ability__text">{{ a.text }}</p> }
+                    @if (a.keyProps.length) {
+                      <ul class="ability__props">@for (p of a.keyProps; track p) { <li>{{ p }}</li> }</ul>
+                    }
+                    @if (a.upgrades.length) {
+                      <ol class="ability__upgrades">
+                        @for (tier of a.upgrades; track $index) {
+                          <li>
+                            <span class="tier">T{{ $index + 1 }}</span>
+                            {{ tier.join(' · ') }}
+                          </li>
+                        }
+                      </ol>
+                    }
+                  </div>
+                </li>
+              } @empty {
+                <li class="note">Habilidades ainda não sincronizadas.</li>
+              }
+            </ol>
+          }
+
+          @case ('items') {
+            <p class="note">
+              Itens mais comprados com este herói em cada fase da partida, com taxa de escolha e de vitória.
+              Dados: Deadlock API.
+            </p>
+            <div class="phases">
+              @for (phase of popularPhases(); track phase.label) {
+                <section class="box">
+                  <h2 class="box__title">{{ phase.label }}</h2>
+                  <ul class="items">
+                    @for (it of phase.items; track it.id) {
+                      <li [class]="'item ' + slotClass(it)">
+                        @if (it.shop_image_url ?? it.image_url; as img) {
+                          <img [src]="img" alt="" width="40" height="40" loading="lazy" />
+                        }
+                        <span class="item__name">{{ names.primary(it.name, it.name_en) }}</span>
+                        <span class="item__num" title="Taxa de escolha">{{ it.pick_pct }}%</span>
+                        <span class="item__num item__num--win" title="Taxa de vitória">{{ it.winrate_pct }}%</span>
+                      </li>
+                    }
+                  </ul>
+                  <p class="legend"><span>escolha</span><span>vitória</span></p>
+                </section>
+              } @empty {
+                <p class="note">Sem dados de itens para este herói ainda.</p>
+              }
+            </div>
+          }
+
+          @case ('lore') {
+            <section class="box lore">
+              <h2 class="box__title">História</h2>
+              <p class="prose">{{ h.lore ?? 'História ainda não disponível.' }}</p>
+              <p class="note">Texto oficial do jogo · Valve.</p>
+            </section>
+          }
+        }
+      </div>
+    </div>
+  </article>
+}

@@ -1,0 +1,365 @@
+:host {
+  display: block;
+  padding-bottom: 56px;
+}
+
+.status {
+  padding-top: 32px;
+  color: var(--muted);
+
+  &--error { color: var(--live); }
+}
+
+.back {
+  font-size: 13px;
+  color: var(--accent-soft);
+}
+
+// ============ Banner ============
+.banner {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--hero-color) 18%, #0a0a0a);
+  border-bottom: 3px solid var(--hero-color);
+}
+
+.banner__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+}
+
+.banner__inner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-end;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.banner__card {
+  width: 200px;
+  height: auto;
+  border: 2px solid var(--hero-color);
+  background: #111;
+}
+
+.banner__text {
+  flex: 1 1 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.banner__name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--text-strong);
+}
+
+.banner__alt {
+  margin: 0;
+  font-family: var(--font-cond);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.banner__role {
+  margin: 6px 0 0;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.badges {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  padding: 3px 8px;
+  border: 1px solid #3a3a3a;
+  background: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-weight: 600;
+
+  &--solid {
+    background: var(--hero-color);
+    border-color: var(--hero-color);
+    color: #fff;
+  }
+}
+
+// ============ Abas ============
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-cond);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+
+  &:hover { color: var(--text); }
+
+  &[aria-selected='true'] {
+    color: var(--text-strong);
+    box-shadow: inset 0 -3px 0 var(--hero-color);
+  }
+}
+
+.panel {
+  padding-top: 16px;
+}
+
+// ============ Blocos ============
+.box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+}
+
+.box__title {
+  margin-bottom: 10px;
+  font-family: var(--font-cond);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.prose {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-line;
+  max-width: 75ch;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.pros-cons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+
+  h3 { font-size: 14px; margin-bottom: 4px; }
+  ul { margin: 0; padding-left: 18px; color: var(--muted); }
+}
+
+.stats {
+  margin: 0;
+}
+
+.stats__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px solid var(--row);
+
+  dt { color: var(--muted); }
+  dd { margin: 0; font-weight: 700; }
+}
+
+.weapon {
+  margin-top: 12px;
+  max-height: 90px;
+  width: auto;
+}
+
+// ============ Habilidades ============
+.abilities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ability {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--hero-color);
+}
+
+.ability__icon {
+  position: relative;
+  flex: 0 0 56px;
+
+  img {
+    width: 56px;
+    height: 56px;
+    background: color-mix(in srgb, var(--hero-color) 25%, #111);
+  }
+}
+
+.ability__key {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  padding: 0 4px;
+  background: var(--bg);
+  border: 1px solid var(--hero-color);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ability__body { flex: 1 1 auto; min-width: 0; }
+
+.ability__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  text-transform: uppercase;
+}
+
+.ability__alt {
+  margin-left: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--faint);
+}
+
+.ability__text {
+  margin: 4px 0 0;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.ability__props {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  li {
+    padding: 2px 8px;
+    background: var(--surface-head);
+    font-size: 12px;
+  }
+}
+
+.ability__upgrades {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.tier {
+  display: inline-block;
+  min-width: 26px;
+  margin-right: 6px;
+  padding: 0 4px;
+  background: var(--hero-color);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+}
+
+// ============ Itens ============
+.phases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-top: 1px solid var(--row);
+  border-left: 3px solid transparent;
+  padding-left: 6px;
+
+  img { width: 32px; height: 32px; }
+
+  // cor de borda pelo tipo de slot, como na loja do jogo
+  &.slot--weapon { border-left-color: #e8913a; }
+  &.slot--vitality { border-left-color: #6fcf5a; }
+  &.slot--spirit { border-left-color: #b77cf0; }
+}
+
+.item__name { flex: 1 1 auto; min-width: 0; }
+
+.item__num {
+  width: 48px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted);
+
+  &--win { color: var(--text); font-weight: 700; }
+}
+
+.legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--faint);
+
+  span { width: 58px; text-align: right; }
+}
+
+.lore .prose {
+  font-size: 17px;
+}

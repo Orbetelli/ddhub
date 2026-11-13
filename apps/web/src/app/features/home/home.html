@@ -1,0 +1,153 @@
+<div class="container home">
+  <!-- ================= ESQUERDA: partidas e torneios ================= -->
+  <aside class="col col--left" aria-label="Partidas e torneios">
+    <app-panel heading="Partidas" moreLink="/partidas" moreLabel="Todas as partidas »">
+      @for (group of matchGroups(); track group.key) {
+        <div class="list-subhead" [class.is-live]="group.key === 'live'">
+          @if (group.key === 'live') { <span class="live-dot" aria-hidden="true"></span> }
+          {{ group.label }}
+        </div>
+        @for (match of group.matches; track match.id) {
+          <a class="match" [routerLink]="['/partidas', match.id]">
+            <span class="match__team">{{ match.team1.name }}</span>
+            <span class="match__score" [class.is-win]="isWinner(match, 1)" [class.is-lose]="isWinner(match, 2)">
+              {{ match.status === 'scheduled' ? '' : match.team1Score }}
+            </span>
+            <span class="match__team">{{ match.team2.name }}</span>
+            <span class="match__score" [class.is-win]="isWinner(match, 2)" [class.is-lose]="isWinner(match, 1)">
+              {{ match.status === 'scheduled' ? '' : match.team2Score }}
+            </span>
+            <span class="match__meta">{{ match.tournament }}</span>
+            <span class="match__meta">
+              @switch (match.status) {
+                @case ('live') { Bo{{ match.bestOf }} }
+                @case ('scheduled') { {{ match.scheduledAt | date: 'HH:mm' }} }
+                @default { {{ match.scheduledAt | date: 'dd/MM' }} }
+              }
+            </span>
+          </a>
+        }
+      } @empty {
+        <p class="empty">Nenhuma partida por enquanto.</p>
+      }
+    </app-panel>
+
+    <app-panel heading="Torneios" moreLink="/torneios">
+      @for (t of tournaments(); track t.slug) {
+        <a class="list-row list-row--split" [routerLink]="['/torneios', t.slug]">
+          <span class="strong">{{ t.name }}</span>
+          <span class="meta">{{ t.statusLabel }}</span>
+        </a>
+      }
+    </app-panel>
+  </aside>
+
+  <!-- ================= CENTRO: destaque, iniciantes, notícias, builds ================= -->
+  <div class="col col--main">
+    @if (featured(); as f) {
+      <div class="featured">
+        <a class="featured__main" [routerLink]="['/noticias', f.slug]">
+          @if (f.coverUrl) {
+            <img class="featured__cover" [src]="f.coverUrl" alt="" />
+          } @else {
+            <span class="featured__placeholder">[ arte da matéria ]</span>
+          }
+          <span class="featured__badge">{{ categoryLabel[f.category] }}</span>
+          <span class="featured__title">{{ f.title }}</span>
+        </a>
+        @for (a of secondary(); track a.slug) {
+          <a class="featured__small" [routerLink]="['/noticias', a.slug]">
+            <span class="tag tag--{{ a.category }}">{{ categoryLabel[a.category] }}</span>
+            <span class="featured__small-title">{{ a.title }}</span>
+          </a>
+        }
+      </div>
+    }
+
+    <section class="newbie" aria-labelledby="newbie-title">
+      <div class="newbie__intro">
+        <h2 id="newbie-title" class="newbie__title">Chegou agora?</h2>
+        <p class="newbie__text">Começa por aqui. É curto, prometo.</p>
+      </div>
+      <ol class="newbie__steps">
+        <li><a routerLink="/aprender/o-basico">O básico: lanes, almas e o mapa</a></li>
+        <li><a routerLink="/herois">Heróis bons pra começar</a></li>
+        <li><a routerLink="/aprender/itens">Itens que todo mundo compra</a></li>
+        <li><a routerLink="/aprender/glossario">Glossário (o que é “gank”, “farm”…)</a></li>
+      </ol>
+    </section>
+
+    <app-panel heading="Notícias" moreLink="/noticias" moreLabel="Arquivo de notícias »">
+      @for (day of articleDays(); track day.label) {
+        <div class="list-subhead">{{ day.label }}</div>
+        @for (a of day.articles; track a.slug) {
+          <a class="list-row" [routerLink]="['/noticias', a.slug]">
+            <span class="news__tag tag tag--{{ a.category }}">{{ categoryLabel[a.category] }}</span>
+            <span class="news__title">{{ a.title }}</span>
+            <span class="meta">{{ a.commentCount }} coment.</span>
+          </a>
+        }
+      }
+    </app-panel>
+
+    <app-panel heading="Builds da galera" moreLink="/builds" moreLabel="Ver todas as builds »">
+      <a panel-action routerLink="/builds" fragment="nova">+ Criar build</a>
+      <div class="table-wrap">
+        <table class="builds">
+          <thead>
+            <tr>
+              <th scope="col">Herói</th>
+              <th scope="col">Build</th>
+              <th scope="col">Autor</th>
+              <th scope="col" class="num">Votos</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of builds(); track b.id) {
+              <tr>
+                <td class="strong">{{ b.hero }}</td>
+                <td><a [routerLink]="['/builds', b.id]">{{ b.title }}</a></td>
+                <td class="muted">{{ b.author }}</td>
+                <td class="num accent">{{ b.score }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-panel>
+  </div>
+
+  <!-- ================= DIREITA: fórum, transferências, heróis ================= -->
+  <aside class="col col--right" aria-label="Comunidade">
+    <app-panel heading="Fórum agora" moreLink="/forum" moreLabel="Ir pro fórum »">
+      @for (t of topics(); track t.id) {
+        <a class="list-row list-row--split" [routerLink]="['/forum', t.id]">
+          <span class="topic__title">{{ t.title }}</span>
+          <span class="meta strong">{{ t.replyCount }}</span>
+        </a>
+      }
+    </app-panel>
+
+    <app-panel heading="Transferências" moreLink="/transferencias" moreLabel="Todas »">
+      @for (t of transfers(); track t.id) {
+        <div class="transfer">
+          <span class="strong">{{ t.player }}</span>
+          <span class="transfer__path">
+            {{ t.from ?? 'sem time' }} <span class="accent" aria-hidden="true">→</span><span class="sr-only">para</span> {{ t.to ?? 'sem time' }}
+          </span>
+        </div>
+      }
+    </app-panel>
+
+    <app-panel heading="Mais jogados (rank alto)" moreLink="/herois" moreLabel="Todos os heróis »">
+      @for (h of heroes(); track h.slug; let i = $index) {
+        <a class="list-row hero" [routerLink]="['/herois', h.slug]">
+          <span class="hero__pos">{{ i + 1 }}</span>
+          <span class="hero__name">{{ h.name }}</span>
+          <span class="meta">{{ h.winRate === null ? '—' : (h.winRate + '%') }}</span>
+        </a>
+      }
+      <p class="source">dados: Deadlock API</p>
+    </app-panel>
+  </aside>
+</div>

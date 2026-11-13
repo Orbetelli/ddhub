@@ -1,0 +1,136 @@
+// =============================================================
+// DDhub — tema global (preto + laranja, detalhes em creme)
+// =============================================================
+
+:root {
+  // superfícies
+  --bg: #0a0a0a;
+  --bg-deep: #000;
+  --surface: #141414;
+  --surface-head: #1b1b1b;
+  --surface-sub: #0f0f0f;
+  --header: #121212;
+
+  // linhas
+  --border: #222;
+  --row: #1e1e1e;
+
+  // texto
+  --text: #e8e6e1;
+  --text-strong: #fff;
+  --muted: #a9a69e;
+  --faint: #8c8980;
+
+  // marca
+  --accent: #ff7a1a;
+  --accent-soft: #ff9a4d;
+  --cream: #f2e3c6;
+
+  // estados / categorias
+  --win: #7bd88f;
+  --live: #ff5a4d;
+  --cat-patch: var(--accent);
+  --cat-guia: #6fb6ff;
+  --cat-cenario: #c7a6ff;
+  --cat-comunidade: #7bd88f;
+
+  // tipografia
+  --font-body: 'Barlow', system-ui, sans-serif;
+  --font-cond: 'Barlow Condensed', 'Barlow', sans-serif;
+  --font-display: 'Big Shoulders Display', 'Barlow Condensed', sans-serif;
+
+  // layout
+  --container: 1240px;
+  --gap: 16px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent-soft);
+  }
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// Linhas de lista usadas dentro dos painéis
+.list-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 12px;
+  border-top: 1px solid var(--row);
+}
+
+.list-subhead {
+  padding: 5px 12px;
+  background: var(--surface-sub);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  &--patch { color: var(--cat-patch); }
+  &--guia { color: var(--cat-guia); }
+  &--cenario { color: var(--cat-cenario); }
+  &--comunidade { color: var(--cat-comunidade); }
+}

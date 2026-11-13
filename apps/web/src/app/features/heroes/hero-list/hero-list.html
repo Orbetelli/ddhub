@@ -1,0 +1,83 @@
+<section class="container page">
+  <header class="page__head">
+    <h1 class="page__title">Heróis</h1>
+    <p class="page__intro">
+      Todos os heróis jogáveis de Deadlock, com habilidades, itens mais comprados e história.
+      Use o seletor <strong>Nomes: PT | EN</strong> no topo para ver os nomes originais em inglês.
+    </p>
+  </header>
+
+  <div class="filters" role="search">
+    <label class="filters__search">
+      <span class="sr-only">Buscar herói</span>
+      <input
+        type="search"
+        placeholder="Buscar por nome (PT ou EN)…"
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+    </label>
+
+    <div class="chips" role="group" aria-label="Filtrar por tipo">
+      <button type="button" class="chip" [attr.aria-pressed]="type() === 'all'" (click)="type.set('all')">Todos</button>
+      @for (opt of typeOptions; track opt[0]) {
+        <button type="button" class="chip" [attr.aria-pressed]="type() === opt[0]" (click)="type.set(opt[0])">
+          {{ opt[1] }}
+        </button>
+      }
+    </div>
+
+    <div class="chips" role="group" aria-label="Filtrar por dificuldade">
+      <button type="button" class="chip" [attr.aria-pressed]="complexity() === 'all'" (click)="complexity.set('all')">
+        Qualquer dificuldade
+      </button>
+      @for (c of complexityOptions; track c) {
+        <button type="button" class="chip" [attr.aria-pressed]="complexity() === c" (click)="complexity.set(c)">
+          {{ complexityLabel[c] }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="status">Carregando heróis…</p>
+    }
+    @case ('error') {
+      <p class="status status--error">
+        Não foi possível carregar os heróis. Confere se a API está rodando em localhost:3000.
+      </p>
+    }
+    @default {
+      <p class="count" aria-live="polite">{{ filtered().length }} heróis</p>
+
+      <ul class="grid">
+        @for (h of filtered(); track h.id) {
+          <li>
+            <a class="card" [routerLink]="['/herois', h.slug]" [style.--hero-color]="h.color_hex ?? 'var(--accent)'">
+              <div class="card__art">
+                @if (h.card_image) {
+                  <img [src]="h.card_image" alt="" loading="lazy" width="220" height="300" />
+                }
+              </div>
+              <div class="card__body">
+                <span class="card__name">{{ names.primary(h.name, h.name_en) }}</span>
+                @if (names.secondary(h.name, h.name_en); as other) {
+                  <span class="card__alt">{{ other }}</span>
+                }
+                @if (meta(h); as m) {
+                  <span class="card__meta">{{ m }}</span>
+                }
+              </div>
+            </a>
+          </li>
+        } @empty {
+          <li class="empty">
+            Nenhum herói encontrado.
+            <button type="button" class="link-btn" (click)="clearFilters()">Limpar filtros</button>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

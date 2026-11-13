@@ -1,0 +1,147 @@
+// Índice + conteúdo; no celular o índice vai pro topo
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+  padding-top: 24px;
+  padding-bottom: 56px;
+}
+
+// ------- índice -------
+.toc {
+  flex: 1 1 240px;
+  max-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.toc__home {
+  display: block;
+  padding: 10px 12px;
+  background: var(--surface-head);
+  border-bottom: 2px solid var(--accent);
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc__link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--row);
+  border-left: 3px solid transparent;
+  font-size: 14px;
+
+  &--active {
+    border-left-color: var(--accent);
+    background: #181818;
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+}
+
+.toc__num {
+  width: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+// ------- conteúdo -------
+.content {
+  flex: 999 1 560px;
+  min-width: 0;
+}
+
+.status {
+  color: var(--muted);
+
+  &--error { color: var(--live); }
+}
+
+.head {
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 3px solid var(--accent);
+}
+
+.head__eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--text-strong);
+}
+
+.head__summary {
+  margin: 8px 0 0;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.updated {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+// ------- anterior / próximo -------
+.pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pager__link {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  &--next {
+    grid-column: 2;
+    text-align: right;
+  }
+}
+
+.pager__label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.pager__title {
+  font-family: var(--font-cond);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}

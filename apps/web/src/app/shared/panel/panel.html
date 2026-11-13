@@ -1,0 +1,12 @@
+<section class="panel">
+  <header class="panel__head">
+    <h2 class="panel__title">{{ heading() }}</h2>
+    <ng-content select="[panel-action]" />
+  </header>
+
+  <ng-content />
+
+  @if (moreLink(); as link) {
+    <a class="panel__more" [routerLink]="link">{{ moreLabel() }}</a>
+  }
+</section>
