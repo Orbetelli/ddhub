@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { LiveService, LiveSnapshot } from './live.service.js';
+import { LiveService } from './live.service.js';
+import type { LiveSnapshot } from './live.service.js';
 
 @Controller('live')
 export class LiveController {
