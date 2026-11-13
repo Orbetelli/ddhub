@@ -6,6 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { PortalDataService } from '../../core/services/portal-data.service';
 import { ARTICLE_CATEGORY_LABEL, Article, Match } from '../../core/models/portal.models';
 import { Panel } from '../../shared/panel/panel';
+import { LiveNow } from '../../shared/live-now/live-now';
 
 interface MatchGroup {
   key: 'live' | 'upcoming' | 'results';
@@ -20,7 +21,7 @@ interface ArticleDay {
 
 @Component({
   selector: 'app-home',
-  imports: [Panel, RouterLink, DatePipe],
+  imports: [Panel, RouterLink, DatePipe, LiveNow],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

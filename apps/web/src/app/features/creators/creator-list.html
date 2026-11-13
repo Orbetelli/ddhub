@@ -21,10 +21,15 @@
 </header>
 
 <section class="container page">
-  <!-- ============ Ao vivo agora (próximo passo: Twitch API) ============ -->
+  <!-- ============ Ao vivo agora (Twitch) ============ -->
   <section class="live" aria-labelledby="live-title">
-    <h2 id="live-title" class="section-title"><span class="live__dot" aria-hidden="true"></span> Ao vivo agora</h2>
-    <p class="live__empty">Em breve: aqui vão aparecer os criadores que estiverem em live de Deadlock neste momento.</p>
+    <h2 id="live-title" class="section-title">
+      <span class="live__dot" aria-hidden="true"></span> Ao vivo agora
+      @if (live.snapshot().streams.length) {
+        <span class="live__count">{{ live.snapshot().streams.length }}</span>
+      }
+    </h2>
+    <app-live-now />
   </section>
 
   <!-- ============ Lista ============ -->
@@ -50,7 +55,7 @@
     @case ('error') {
       <div class="notice notice--error">
         <strong>Não deu para carregar os criadores.</strong>
-        <span>Confere se a API está rodando em localhost:3000 e se a migration de criadores já foi aplicada.</span>
+        <span>Tenta recarregar a página em alguns segundos.</span>
       </div>
     }
 
@@ -58,8 +63,11 @@
       @if (creators().length) {
         <ul class="grid">
           @for (c of creators(); track c.slug) {
-            <li class="card">
+            <li class="card" [class.card--live]="live.liveSlugs().has(c.slug)">
               <div class="card__banner" aria-hidden="true"></div>
+              @if (live.liveSlugs().has(c.slug)) {
+                <span class="card__live">AO VIVO</span>
+              }
               <div class="card__body">
                 @if (c.avatar_url) {
                   <img class="avatar" [src]="c.avatar_url" [alt]="'Foto de ' + c.name" width="76" height="76" loading="lazy" />

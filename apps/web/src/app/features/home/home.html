@@ -119,6 +119,10 @@
 
   <!-- ================= DIREITA: fórum, transferências, heróis ================= -->
   <aside class="col col--right" aria-label="Comunidade">
+    <app-panel heading="Ao vivo agora" moreLink="/criadores" moreLabel="Todos os criadores »">
+      <app-live-now variant="compact" [limit]="5" />
+    </app-panel>
+
     <app-panel heading="Fórum agora" moreLink="/forum" moreLabel="Ir pro fórum »">
       @for (t of topics(); track t.id) {
         <a class="list-row list-row--split" [routerLink]="['/forum', t.id]">

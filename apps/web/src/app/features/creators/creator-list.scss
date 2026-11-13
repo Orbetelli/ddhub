@@ -412,3 +412,37 @@
   .stats { width: 100%; }
   .stat { flex: 1 1 0; min-width: 0; }
 }
+// ============ Ao vivo (Twitch) ============
+.live__count {
+  padding: 0 7px;
+  background: var(--live);
+  font-size: 14px;
+  color: #fff;
+}
+
+.live .section-title {
+  margin-bottom: 12px;
+}
+
+.card {
+  position: relative;
+}
+
+.card--live {
+  border-color: var(--twitch);
+
+  .avatar { outline-color: var(--twitch); }
+}
+
+.card__live {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  background: var(--live);
+  font-family: var(--font-cond);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
