@@ -1,0 +1,53 @@
+@if (!live.snapshot().enabled) {
+  <p class="empty">Em breve: aqui vão aparecer os criadores que estiverem em live de Deadlock.</p>
+} @else if (streams().length === 0) {
+  <p class="empty">Ninguém da lista está ao vivo em Deadlock agora. Volta daqui a pouco!</p>
+} @else if (variant() === 'compact') {
+  <ul class="rows">
+    @for (s of streams(); track s.slug) {
+      <li>
+        <a class="row" [href]="s.url" target="_blank" rel="noopener noreferrer">
+          @if (s.avatar) {
+            <img class="row__avatar" [src]="s.avatar" alt="" width="32" height="32" loading="lazy" />
+          } @else {
+            <span class="row__avatar row__avatar--empty" aria-hidden="true"></span>
+          }
+          <span class="row__text">
+            <span class="row__name">{{ s.name }}</span>
+            <span class="row__title">{{ s.title }}</span>
+          </span>
+          <span class="row__viewers" [title]="s.viewers + ' espectadores'">{{ viewers(s.viewers) }}</span>
+          <span class="sr-only">(abre a live na Twitch em nova aba)</span>
+        </a>
+      </li>
+    }
+  </ul>
+  @if (total() > streams().length) {
+    <p class="more">e mais {{ total() - streams().length }} ao vivo</p>
+  }
+} @else {
+  <ul class="grid">
+    @for (s of streams(); track s.slug) {
+      <li>
+        <a class="stream" [href]="s.url" target="_blank" rel="noopener noreferrer">
+          <span class="stream__thumb">
+            <img [src]="s.thumbnail" [alt]="'Live de ' + s.name" width="440" height="248" loading="lazy" />
+            <span class="badge">AO VIVO</span>
+            <span class="viewers">{{ viewers(s.viewers) }} assistindo</span>
+          </span>
+          <span class="stream__info">
+            @if (s.avatar) {
+              <img class="stream__avatar" [src]="s.avatar" alt="" width="40" height="40" loading="lazy" />
+            }
+            <span class="stream__text">
+              <span class="stream__name">{{ s.name }}</span>
+              <span class="stream__title">{{ s.title }}</span>
+              <span class="stream__since">no ar desde {{ s.started_at | date: 'HH:mm' }}</span>
+            </span>
+          </span>
+          <span class="sr-only">(abre a live na Twitch em nova aba)</span>
+        </a>
+      </li>
+    }
+  </ul>
+}
