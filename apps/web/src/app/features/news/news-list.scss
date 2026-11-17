@@ -1,0 +1,152 @@
+.page { padding-top: 24px; padding-bottom: 56px; }
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.title {
+  display: inline-block;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--accent);
+}
+
+.intro { max-width: 640px; margin: 10px 0 0; color: var(--muted); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.chip {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #2c2c2c;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  &:hover { color: var(--text); }
+  &[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+}
+
+// ------- etiquetas -------
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--faint); }
+
+.tag {
+  --c: var(--accent);
+  padding: 1px 7px;
+  background: var(--c);
+  font-family: var(--font-cond);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bg);
+  &--patch { --c: var(--accent); }
+  &--guia { --c: #6fb7ff; }
+  &--cenario { --c: #c7a6ff; }
+  &--comunidade { --c: #6fcf5a; }
+}
+
+.official { font-weight: 600; color: var(--cream); }
+
+// ------- destaque -------
+.feature {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-bottom: 16px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 122, 26, 0.16), transparent 50%),
+    var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  color: var(--text);
+  text-decoration: none;
+  &:hover { border-color: #3a3a3a; border-left-color: var(--accent); }
+  &--cover { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  @media (max-width: 760px) { &--cover { grid-template-columns: 1fr; } }
+}
+
+.feature__img { width: 100%; height: 100%; min-height: 200px; object-fit: cover; }
+
+.feature__body { display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; }
+
+.feature__title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--text-strong);
+}
+
+.feature__excerpt { max-width: 760px; line-height: 1.55; color: var(--muted); }
+
+.more { font-weight: 600; color: var(--accent-soft); }
+
+// ------- lista -------
+.list { margin: 0; padding: 0; list-style: none; }
+
+.row {
+  display: flex;
+  gap: 16px;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--row);
+  color: var(--text);
+  text-decoration: none;
+  &:hover { background: var(--surface); .row__title { color: var(--accent-soft); } }
+}
+
+.row__date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 52px;
+  padding-top: 2px;
+}
+
+.row__day { font-family: var(--font-display); font-size: 28px; font-weight: 800; line-height: 1; color: var(--text-strong); }
+.row__month { font-family: var(--font-cond); font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--faint); }
+
+.row__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.row__title { font-size: 17px; font-weight: 700; color: var(--text-strong); }
+.row__excerpt {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+// ------- estados -------
+.feature--skeleton, .row--skeleton {
+  background: linear-gradient(90deg, var(--surface) 0%, #1c1c1c 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.feature--skeleton { height: 180px; }
+.row--skeleton { height: 76px; margin-bottom: 2px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  strong { color: var(--text-strong); }
+  span { font-size: 14px; color: var(--muted); }
+}

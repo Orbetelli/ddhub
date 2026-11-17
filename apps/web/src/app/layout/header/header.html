@@ -7,7 +7,7 @@
         <button type="button" class="names-toggle__btn" [attr.aria-pressed]="!names.isEnglish()" (click)="names.set('pt')">PT</button>
         <button type="button" class="names-toggle__btn" [attr.aria-pressed]="names.isEnglish()" (click)="names.set('en')">EN</button>
       </span>
-      <span>Patch atual: <a routerLink="/noticias" class="utility__patch">{{ patchVersion() }}</a></span>
+      <span>Patch atual: <a [routerLink]="patch() ? ['/noticias', patch()!.slug] : '/noticias'" class="utility__patch" [title]="patch()?.title ?? ''">{{ patchLabel() }}</a></span>
     </span>
   </div>
 </div>

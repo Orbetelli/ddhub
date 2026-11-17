@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 
 import { NamePreferenceService } from '../../core/services/name-preference.service';
+import { NewsService } from '../../core/services/news.service';
 
 interface NavLink {
   label: string;
@@ -73,8 +74,14 @@ export class Header {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly router = inject(Router);
 
-  /** Versão do patch exibida na faixa do topo (virá da API). */
-  protected readonly patchVersion = signal('[versão]');
+  /** Último patch oficial (faixa do topo): data + link para as notas. */
+  private readonly news = inject(NewsService);
+  protected readonly patch = computed(() => this.news.meta().patch);
+  protected readonly patchLabel = computed(() => {
+    const p = this.patch();
+    if (!p) return '…';
+    return new Date(p.published_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  });
 
   protected readonly menuOpen = signal(false);
   /** Grupo com o menu suspenso aberto (um por vez). */

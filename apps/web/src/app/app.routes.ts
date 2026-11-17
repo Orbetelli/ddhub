@@ -19,7 +19,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/home/home').then((m) => m.Home),
   },
 
-  ...section('noticias', 'Notícias', 'slug'),
+  {
+    path: 'noticias',
+    title: 'Notícias · DDhub',
+    loadComponent: () => import('./features/news/news-list').then((m) => m.NewsList),
+  },
+  {
+    path: 'noticias/:slug',
+    title: 'Notícia · DDhub',
+    loadComponent: () => import('./features/news/news-article').then((m) => m.NewsArticle),
+  },
   ...section('partidas', 'Partidas', 'id'),
   ...section('torneios', 'Torneios', 'slug'),
   {

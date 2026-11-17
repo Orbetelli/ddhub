@@ -9,6 +9,7 @@
  *   content/aprender/*.md  → capítulos do guia "Aprender a jogar" (learn_chapters)
  *   content/herois/*.md    → "Como jogar" de cada herói (hero_guides)
  *   content/criadores/*.md → streamers e YouTubers BR (creators)
+ *   content/noticias/*.md  → matérias da equipe (articles)
  *
  * Arquivos que começam com "_" (ex.: _modelo.md) são ignorados: servem de modelo.
  *
@@ -53,6 +54,18 @@
  *   published: true
  *   ---
  *   Bio curta em Markdown.
+ *
+ * ── Notícia ─────────────────────────────────────────
+ *   ---
+ *   slug: guia-do-patch-novembro
+ *   category: guia              ← patch | guia | cenario | comunidade
+ *   title: O que mudou no patch de novembro
+ *   excerpt: Resumo curto que aparece na lista (até 300 caracteres).
+ *   cover: https://...          ← opcional, imagem de capa
+ *   date: 2026-11-16            ← opcional (padrão: quando foi publicada)
+ *   published: true
+ *   ---
+ *   Texto em Markdown (aceita os atalhos {{heroi:...}}, {{item:...}} etc.).
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
@@ -63,6 +76,8 @@ const CONTENT_ROOT = resolve(here, '../../../content');
 const LEARN_DIR = join(CONTENT_ROOT, 'aprender');
 const HEROES_DIR = join(CONTENT_ROOT, 'herois');
 const CREATORS_DIR = join(CONTENT_ROOT, 'criadores');
+const NEWS_DIR = join(CONTENT_ROOT, 'noticias');
+const NEWS_CATEGORIES = ['patch', 'guia', 'cenario', 'comunidade'];
 const DRY_RUN = process.argv.includes('--dry-run');
 const SLUG = /^[a-z0-9-]{1,60}$/;
 
@@ -233,6 +248,60 @@ async function loadCreators() {
   return creators;
 }
 
+// ───────────────────────── notícias ─────────────────────────
+function parseArticle(file, raw) {
+  const { meta, body } = splitFrontMatter(file, raw);
+  if (!SLUG.test(meta.slug ?? '') || meta.slug.startsWith('steam-')) {
+    throw new Error(`${file}: "slug" inválido (letras minúsculas, números e hífen; não pode começar com "steam-").`);
+  }
+  if (!NEWS_CATEGORIES.includes(meta.category)) throw new Error(`${file}: "category" deve ser: ${NEWS_CATEGORIES.join(', ')}.`);
+  if (!meta.title || meta.title.length < 5 || meta.title.length > 140) throw new Error(`${file}: "title" precisa ter de 5 a 140 caracteres.`);
+  if (meta.excerpt && meta.excerpt.length > 300) throw new Error(`${file}: "excerpt" passa de 300 caracteres.`);
+  if (meta.cover && !/^https:\/\/\S+$/.test(meta.cover)) throw new Error(`${file}: "cover" precisa ser um link https.`);
+  let date = null;
+  if (meta.date) {
+    const d = new Date(`${meta.date}T12:00:00-03:00`);
+    if (Number.isNaN(d.getTime())) throw new Error(`${file}: "date" inválida (use AAAA-MM-DD).`);
+    date = d.toISOString();
+  }
+  if (!body) throw new Error(`${file}: o texto da notícia está vazio.`);
+  return {
+    slug: meta.slug,
+    category: meta.category,
+    title: meta.title,
+    excerpt: meta.excerpt || null,
+    cover_url: meta.cover || null,
+    body_md: body,
+    date,
+    published: meta.published === 'true',
+  };
+}
+
+async function loadArticles() {
+  const articles = [];
+  for (const file of await listMarkdown(NEWS_DIR)) {
+    articles.push(parseArticle(file, await readFile(join(NEWS_DIR, file), 'utf8')));
+  }
+  const dupe = articles.find((a, i) => articles.findIndex((o) => o.slug === a.slug) !== i);
+  if (dupe) throw new Error(`Notícia com slug repetido: ${dupe.slug}`);
+  return articles;
+}
+
+async function writeArticles(db, articles) {
+  if (articles.length === 0) return;
+  const { data: existing, error: readErr } = await db.from('articles').select('slug, published_at');
+  if (readErr) throw new Error(`Erro ao ler notícias: ${readErr.message}`);
+  const publishedAt = new Map((existing ?? []).map((r) => [r.slug, r.published_at]));
+  const now = new Date().toISOString();
+
+  const rows = articles.map(({ published, date, ...a }) => ({
+    ...a,
+    published_at: published ? (date ?? publishedAt.get(a.slug) ?? now) : null,
+  }));
+  const { error } = await db.from('articles').upsert(rows, { onConflict: 'slug' });
+  if (error) throw new Error(`Erro ao gravar notícias: ${error.message}`);
+}
+
 // ───────────────────────── gravação ─────────────────────────
 async function writeChapters(db, chapters) {
   const { data: existing, error: readErr } = await db.from('learn_chapters').select('slug, published_at');
@@ -329,6 +398,7 @@ async function main() {
   const chapters = await loadChapters();
   const guides = await loadHeroGuides();
   const creators = await loadCreators();
+  const articles = await loadArticles();
 
   console.log(`📚 ${chapters.length} capítulos em ${LEARN_DIR}`);
   for (const c of chapters) {
@@ -346,6 +416,11 @@ async function main() {
     console.log(`  ${c.slug.padEnd(16)} ${c.published ? 'publicado ' : 'rascunho  '} ${nets.join(', ')}`);
   }
 
+  console.log(`\n📰 ${articles.length} notícias em ${NEWS_DIR}`);
+  for (const a of articles) {
+    console.log(`  ${a.slug.padEnd(28)} ${a.published ? 'publicada ' : 'rascunho  '} ${a.category}`);
+  }
+
   if (DRY_RUN) {
     console.log('\n(--dry-run) Nada foi gravado.');
     return;
@@ -361,6 +436,7 @@ async function main() {
   await writeChapters(db, chapters);
   await writeHeroGuides(db, guides);
   await writeCreators(db, creators);
+  await writeArticles(db, articles);
   console.log('\n✅ Conteúdo sincronizado.');
   await clearApiCache();
 }

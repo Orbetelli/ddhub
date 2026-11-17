@@ -1,0 +1,49 @@
+@switch (state().status) {
+  @case ('loading') {
+    <p class="container status">Carregando…</p>
+  }
+  @case ('not-found') {
+    <section class="container status">
+      <h1>Notícia não encontrada</h1>
+      <a routerLink="/noticias" class="back">« Todas as notícias</a>
+    </section>
+  }
+  @case ('error') {
+    <p class="container status">Não deu para carregar a notícia. Tenta recarregar a página em alguns segundos.</p>
+  }
+}
+
+@if (item(); as n) {
+  <article class="container article">
+    <a routerLink="/noticias" class="back">« Notícias</a>
+
+    <header class="head">
+      <p class="meta">
+        <span [class]="'tag tag--' + n.category">{{ label[n.category] }}</span>
+        @if (n.kind === 'official') { <span class="official">Oficial · Valve</span> }
+        <time [attr.datetime]="n.published_at">{{ n.published_at | date: "d 'de' MMMM 'de' y, HH:mm" }}</time>
+      </p>
+      <h1 class="title">{{ n.title }}</h1>
+      @if (n.excerpt && n.kind === 'article') { <p class="excerpt">{{ n.excerpt }}</p> }
+    </header>
+
+    @if (n.cover_url) {
+      <img class="cover" [src]="n.cover_url" alt="" />
+    }
+
+    @if (n.kind === 'official') {
+      <p class="source">
+        Notas oficiais publicadas pela Valve, no idioma original.
+        @if (n.source_url) {
+          <a [href]="n.source_url" target="_blank" rel="noopener noreferrer">Ver o anúncio na Steam ↗</a>
+        }
+      </p>
+    }
+
+    <app-markdown class="body" [source]="n.body_md" />
+
+    @if (n.kind === 'official') {
+      <p class="credit">Texto oficial do jogo · Valve. Deadlock é marca da Valve.</p>
+    }
+  </article>
+}

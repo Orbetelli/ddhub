@@ -1,0 +1,81 @@
+<section class="container page">
+  <header class="head">
+    <div>
+      <h1 class="title">Notícias</h1>
+      <p class="intro">
+        Atualizações oficiais do Deadlock assim que a Valve publica, e matérias da equipe DDhub
+        sobre patch, guias e a cena brasileira.
+      </p>
+    </div>
+
+    <div class="chips" role="group" aria-label="Filtrar por categoria">
+      @for (f of filters; track f.label) {
+        <button type="button" class="chip" [attr.aria-pressed]="category() === f.id" (click)="category.set(f.id)">
+          {{ f.label }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="feature feature--skeleton"></div>
+      <ul class="list">
+        @for (s of skeleton; track s) { <li class="row row--skeleton"></li> }
+      </ul>
+    }
+
+    @case ('error') {
+      <div class="notice">
+        <strong>Não deu para carregar as notícias.</strong>
+        <span>Tenta recarregar a página em alguns segundos.</span>
+      </div>
+    }
+
+    @default {
+      @if (featured(); as f) {
+        <a class="feature" [class.feature--cover]="!!f.cover_url" [routerLink]="['/noticias', f.slug]">
+          @if (f.cover_url) {
+            <img class="feature__img" [src]="f.cover_url" alt="" loading="lazy" />
+          }
+          <span class="feature__body">
+            <span class="meta">
+              <span [class]="'tag tag--' + f.category">{{ label[f.category] }}</span>
+              @if (f.kind === 'official') { <span class="official">Oficial · Valve</span> }
+              <time [attr.datetime]="f.published_at">{{ f.published_at | date: "d 'de' MMMM 'de' y" }}</time>
+            </span>
+            <span class="feature__title">{{ f.title }}</span>
+            @if (f.excerpt) { <span class="feature__excerpt">{{ f.excerpt }}</span> }
+            <span class="more">Ler »</span>
+          </span>
+        </a>
+
+        <ul class="list">
+          @for (n of rest(); track n.slug) {
+            <li>
+              <a class="row" [routerLink]="['/noticias', n.slug]">
+                <time class="row__date" [attr.datetime]="n.published_at">
+                  <span class="row__day">{{ n.published_at | date: 'dd' }}</span>
+                  <span class="row__month">{{ n.published_at | date: 'MMM' }}</span>
+                </time>
+                <span class="row__body">
+                  <span class="meta">
+                    <span [class]="'tag tag--' + n.category">{{ label[n.category] }}</span>
+                    @if (n.kind === 'official') { <span class="official">Oficial · Valve</span> }
+                  </span>
+                  <span class="row__title">{{ n.title }}</span>
+                  @if (n.excerpt) { <span class="row__excerpt">{{ n.excerpt }}</span> }
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="notice">
+          <strong>Nada por aqui ainda.</strong>
+          <span>Nenhuma notícia nessa categoria por enquanto.</span>
+        </div>
+      }
+    }
+  }
+</section>
