@@ -21,6 +21,10 @@ export interface NewsDetail extends NewsItem {
   body_md: string;
   /** Link do anúncio original na Steam (só para os oficiais). */
   source_url: string | null;
+  /** Anúncio oficial traduzido automaticamente? Se sim, o original vem junto. */
+  translated: boolean;
+  original_title: string | null;
+  original_md: string | null;
 }
 
 const SLUG = /^[a-z0-9-]{1,90}$/;
@@ -86,7 +90,7 @@ export class NewsController {
         .limit(100),
       this.supabase.db
         .from('patch_notes')
-        .select('gid, title, body_raw, is_patch, published_at')
+        .select('gid, title, title_pt, body_raw, body_pt_md, is_patch, published_at')
         .order('published_at', { ascending: false })
         .limit(60),
     ]);
@@ -107,8 +111,8 @@ export class NewsController {
         kind: 'official' as const,
         // Anúncios que não são patch (eventos, votações) entram como "comunidade"
         category: (p['is_patch'] ? 'patch' : 'comunidade') as NewsCategory,
-        title: p['title'],
-        excerpt: excerptFrom(steamToMarkdown(p['body_raw'] ?? '')) || null,
+        title: p['title_pt'] || p['title'],
+        excerpt: excerptFrom(p['body_pt_md'] || steamToMarkdown(p['body_raw'] ?? '')) || null,
         cover_url: null,
         published_at: p['published_at'],
       })),
@@ -121,22 +125,27 @@ export class NewsController {
     if (official) {
       const { data, error } = await this.supabase.db
         .from('patch_notes')
-        .select('gid, title, url, body_raw, is_patch, published_at')
+        .select('gid, title, title_pt, url, body_raw, body_pt_md, is_patch, published_at')
         .eq('gid', official[1])
         .maybeSingle();
       if (error) throw new InternalServerErrorException('Não foi possível carregar a notícia.');
       if (!data) throw new NotFoundException('Notícia não encontrada.');
-      const body = steamToMarkdown(data.body_raw ?? '');
+      const original = steamToMarkdown(data.body_raw ?? '');
+      const translated = !!data.body_pt_md;
+      const body = data.body_pt_md || original;
       return {
         slug,
         kind: 'official',
         category: data.is_patch ? 'patch' : 'comunidade',
-        title: data.title,
+        title: data.title_pt || data.title,
         excerpt: excerptFrom(body) || null,
         cover_url: null,
         published_at: data.published_at,
         body_md: body,
         source_url: data.url,
+        translated,
+        original_title: translated ? data.title : null,
+        original_md: translated ? original : null,
       };
     }
 
@@ -147,6 +156,6 @@ export class NewsController {
       .maybeSingle();
     if (error) throw new InternalServerErrorException('Não foi possível carregar a notícia.');
     if (!data || !data.published_at || new Date(data.published_at) > new Date()) throw new NotFoundException('Notícia não encontrada.');
-    return { ...(data as Row), kind: 'article', source_url: null } as NewsDetail;
+    return { ...(data as Row), kind: 'article', source_url: null, translated: false, original_title: null, original_md: null } as NewsDetail;
   }
 }

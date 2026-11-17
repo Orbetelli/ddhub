@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { MemoryCache } from '../cache/memory-cache.service.js';
+import { TranslatorService } from './translator.service.js';
 
 /** Deadlock na Steam. */
 const STEAM_APP_ID = 1422450;
@@ -33,6 +34,7 @@ export class NewsSyncService implements OnApplicationBootstrap {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly cache: MemoryCache,
+    private readonly translator: TranslatorService,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -78,6 +80,10 @@ export class NewsSyncService implements OnApplicationBootstrap {
         this.cache.clear();
       }
       this.logger.log(`Notícias da Steam: ${rows.length} anúncios (${rows.filter((r) => r.is_patch).length} de patch).`);
+
+      // Traduz o que ainda não tem tradução (poucos por vez, para respeitar o limite do Groq)
+      const translated = await this.translator.translatePending(3);
+      if (translated) this.cache.clear();
       return rows.length;
     } catch (err) {
       this.logger.warn(`Notícias da Steam: ${String(err)}`);

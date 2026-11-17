@@ -15,6 +15,10 @@ export interface NewsItem {
 export interface NewsDetail extends NewsItem {
   body_md: string;
   source_url: string | null;
+  /** Anúncio oficial traduzido automaticamente (o original vem junto). */
+  translated: boolean;
+  original_title: string | null;
+  original_md: string | null;
 }
 
 export interface SiteMeta {

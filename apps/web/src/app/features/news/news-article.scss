@@ -47,7 +47,28 @@
   border-left: 3px solid var(--cream);
   font-size: 14px;
   color: var(--muted);
-  a { margin-left: 6px; font-weight: 600; color: var(--accent-soft); }
+  p { margin: 0; }
+  strong { color: var(--text-strong); }
+  a { font-weight: 600; color: var(--accent-soft); }
+}
+
+.source__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px !important;
+}
+
+.toggle {
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-soft);
+  cursor: pointer;
+  &:hover { background: var(--accent); color: var(--bg); }
 }
 
 .body { font-size: 16px; line-height: 1.65; }

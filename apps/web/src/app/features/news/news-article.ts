@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -44,4 +44,27 @@ export class NewsArticle {
     const s = this.state();
     return s.status === 'ok' ? s.item : null;
   });
+
+  /** Mostrar o texto original (inglês) em vez da tradução. */
+  protected readonly showOriginal = signal(false);
+
+  protected readonly title = computed(() => {
+    const n = this.item();
+    if (!n) return '';
+    return this.showOriginal() && n.original_title ? n.original_title : n.title;
+  });
+
+  protected readonly body = computed(() => {
+    const n = this.item();
+    if (!n) return '';
+    return this.showOriginal() && n.original_md ? n.original_md : n.body_md;
+  });
+
+  constructor() {
+    // Ao trocar de notícia, volta para a tradução
+    effect(() => {
+      this.slug();
+      this.showOriginal.set(false);
+    });
+  }
 }

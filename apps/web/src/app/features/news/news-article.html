@@ -23,7 +23,7 @@
         @if (n.kind === 'official') { <span class="official">Oficial · Valve</span> }
         <time [attr.datetime]="n.published_at">{{ n.published_at | date: "d 'de' MMMM 'de' y, HH:mm" }}</time>
       </p>
-      <h1 class="title">{{ n.title }}</h1>
+      <h1 class="title">{{ title() }}</h1>
       @if (n.excerpt && n.kind === 'article') { <p class="excerpt">{{ n.excerpt }}</p> }
     </header>
 
@@ -32,15 +32,29 @@
     }
 
     @if (n.kind === 'official') {
-      <p class="source">
-        Notas oficiais publicadas pela Valve, no idioma original.
-        @if (n.source_url) {
-          <a [href]="n.source_url" target="_blank" rel="noopener noreferrer">Ver o anúncio na Steam ↗</a>
-        }
-      </p>
+      <div class="source">
+        <p>
+          @if (n.translated && !showOriginal()) {
+            <strong>Tradução automática</strong> das notas oficiais da Valve. Nomes de heróis, itens e habilidades ficam
+            como no jogo, em inglês.
+          } @else {
+            Notas oficiais publicadas pela Valve, no idioma original.
+          }
+        </p>
+        <p class="source__actions">
+          @if (n.translated) {
+            <button type="button" class="toggle" (click)="showOriginal.set(!showOriginal())">
+              {{ showOriginal() ? 'Ver tradução em português' : 'Ver original em inglês' }}
+            </button>
+          }
+          @if (n.source_url) {
+            <a [href]="n.source_url" target="_blank" rel="noopener noreferrer">Ver o anúncio na Steam ↗</a>
+          }
+        </p>
+      </div>
     }
 
-    <app-markdown class="body" [source]="n.body_md" />
+    <app-markdown class="body" [source]="body()" [attr.lang]="showOriginal() ? 'en' : 'pt-BR'" />
 
     @if (n.kind === 'official') {
       <p class="credit">Texto oficial do jogo · Valve. Deadlock é marca da Valve.</p>
