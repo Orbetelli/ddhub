@@ -62,7 +62,9 @@ export const routes: Routes = [
     loadComponent: () => import('./features/creators/creator-list').then((m) => m.CreatorList),
   },
   ...section('builds', 'Builds', 'id'),
-  ...section('times', 'Times', 'slug'),
+  { path: 'times', title: 'Times · DDhub', loadComponent: () => import('./features/scene/team-list').then((m) => m.TeamList) },
+  { path: 'times/:slug', title: 'Time · DDhub', loadComponent: () => import('./features/scene/team-detail').then((m) => m.TeamDetail) },
+  { path: 'jogadores/:slug', title: 'Jogador · DDhub', loadComponent: () => import('./features/scene/player-detail').then((m) => m.PlayerDetail) },
   ...section('forum', 'Fórum', 'id'),
   {
     path: 'aprender',
@@ -74,7 +76,7 @@ export const routes: Routes = [
     title: 'Aprender a jogar · DDhub',
     loadComponent: () => import('./features/learn/learn-chapter/learn-chapter').then((m) => m.LearnChapter),
   },
-  { path: 'transferencias', title: 'Transferências · DDhub', loadComponent: placeholder, data: { heading: 'Transferências' } },
+  { path: 'transferencias', title: 'Transferências · DDhub', loadComponent: () => import('./features/scene/transfers').then((m) => m.Transfers) },
 
   {
     path: '**',
