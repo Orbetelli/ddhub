@@ -11,11 +11,7 @@ export function steamToMarkdown(raw: string): string {
   let s = (raw ?? '').replace(/\r\n?/g, '\n');
 
   // Imagens e vídeos incorporados: o site não mostra (ficam no link original)
-  s = s
-    .replace(/\[img\][\s\S]*?\[\/img\]/gi, '')
-    .replace(/\[previewyoutube=[^\]]*\]\s*\[\/previewyoutube\]/gi, '')
-    .replace(/\[video[^\]]*\][\s\S]*?\[\/video\]/gi, '')
-    .replace(/\{STEAM_CLAN_IMAGE\}[^\s\[]*/g, '');
+  s = stripSteamMedia(s);
 
   // Títulos e parágrafos
   s = s
@@ -68,6 +64,23 @@ export function steamToMarkdown(raw: string): string {
     // Itens de lista separados por linha em branco ficam juntos
     .replace(/(^- .*)\n\n(?=- )/gm, '$1\n')
     .trim();
+}
+
+/**
+ * Remove imagens, vídeos e marcadores de mídia da Steam. Cobre os dois formatos:
+ *   [img]{STEAM_CLAN_IMAGE}/x.png[/img]   e   [img src="{STEAM_CLAN_LOC_IMAGE}/x.png"]
+ * Também serve para limpar traduções que já estão salvas no banco.
+ */
+export function stripSteamMedia(text: string): string {
+  return (text ?? '')
+    .replace(/\[img\b[^\]]*\][\s\S]*?\[\/img\]/gi, '')
+    .replace(/\[\s*img\b[^\]]*\]/gi, '')
+    .replace(/\[\/img\]/gi, '')
+    .replace(/\[previewyoutube[^\]]*\][\s\S]*?\[\/previewyoutube\]/gi, '')
+    .replace(/\[\s*previewyoutube[^\]]*\]/gi, '')
+    .replace(/\[video[^\]]*\][\s\S]*?\[\/video\]/gi, '')
+    .replace(/\[\s*video\b[^\]]*\]/gi, '')
+    .replace(/\{STEAM_CLAN(?:_LOC)?_IMAGE\}[^\s\[\]"]*/g, '');
 }
 
 /** Resumo curto em texto puro (para listas). */

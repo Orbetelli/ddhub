@@ -2,7 +2,7 @@ import { BadRequestException, Controller, Get, InternalServerErrorException, Not
 
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { MemoryCache, TTL } from '../cache/memory-cache.service.js';
-import { excerptFrom, steamToMarkdown } from './steam-markup.js';
+import { excerptFrom, steamToMarkdown, stripSteamMedia } from './steam-markup.js';
 
 export type NewsCategory = 'patch' | 'guia' | 'cenario' | 'comunidade';
 
@@ -112,7 +112,7 @@ export class NewsController {
         // Anúncios que não são patch (eventos, votações) entram como "comunidade"
         category: (p['is_patch'] ? 'patch' : 'comunidade') as NewsCategory,
         title: p['title_pt'] || p['title'],
-        excerpt: excerptFrom(p['body_pt_md'] || steamToMarkdown(p['body_raw'] ?? '')) || null,
+        excerpt: excerptFrom(p['body_pt_md'] ? stripSteamMedia(p['body_pt_md']) : steamToMarkdown(p['body_raw'] ?? '')) || null,
         cover_url: null,
         published_at: p['published_at'],
       })),
@@ -132,7 +132,8 @@ export class NewsController {
       if (!data) throw new NotFoundException('Notícia não encontrada.');
       const original = steamToMarkdown(data.body_raw ?? '');
       const translated = !!data.body_pt_md;
-      const body = data.body_pt_md || original;
+      // Limpa sobras de mídia da Steam também nas traduções já salvas
+      const body = data.body_pt_md ? stripSteamMedia(data.body_pt_md).replace(/\n{3,}/g, '\n\n').trim() : original;
       return {
         slug,
         kind: 'official',
