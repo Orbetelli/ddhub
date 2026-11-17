@@ -1,0 +1,96 @@
+// Peças visuais comuns às páginas da cena (times, jogadores, transferências)
+
+.page { padding-top: 24px; padding-bottom: 56px; }
+
+.title {
+  display: inline-block;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--accent);
+}
+
+.intro { max-width: 680px; margin: 10px 0 0; color: var(--muted); }
+
+.back { font-size: 13px; color: var(--accent-soft); }
+
+.box { padding: 16px; background: var(--surface); border: 1px solid var(--border); }
+
+.box__title {
+  margin: 0 0 12px;
+  font-family: var(--font-cond);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-strong);
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  background: #111;
+  border: 1px solid #2c2c2c;
+  object-fit: contain;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.chip-tag {
+  padding: 1px 7px;
+  border: 1px solid #333;
+  font-family: var(--font-cond);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cream);
+}
+
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    --c: var(--cream);
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid #2c2c2c;
+    border-left: 3px solid var(--c);
+    font-family: var(--font-cond);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+    &:hover { border-color: var(--c); }
+  }
+  .s--twitch { --c: #9146ff; }
+  .s--youtube { --c: #ff3b3b; }
+  .s--discord { --c: #5865f2; }
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  strong { color: var(--text-strong); }
+  span { font-size: 14px; color: var(--muted); }
+}
+
+.status { padding: 24px 0; color: var(--muted); }

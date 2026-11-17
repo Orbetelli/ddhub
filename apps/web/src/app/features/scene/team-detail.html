@@ -1,0 +1,104 @@
+@switch (state().status) {
+  @case ('loading') { <p class="container status">Carregando time…</p> }
+  @case ('not-found') {
+    <section class="container status">
+      <h1>Time não encontrado</h1>
+      <a routerLink="/times" class="back">« Todos os times</a>
+    </section>
+  }
+  @case ('error') {
+    <p class="container status">Não deu para carregar o time. Tenta recarregar a página em alguns segundos.</p>
+  }
+}
+
+@if (team(); as t) {
+  <header class="banner">
+    <div class="container banner__inner">
+      <a routerLink="/times" class="back">« Times</a>
+      <div class="banner__main">
+        @if (t.logo_url) {
+          <img class="logo logo--big" [src]="t.logo_url" [alt]="'Logo de ' + t.name" width="104" height="104" />
+        } @else {
+          <span class="logo logo--big" aria-hidden="true">{{ t.tag || initials(t.name) }}</span>
+        }
+        <div>
+          <h1 class="name">{{ t.name }}</h1>
+          <p class="meta">
+            @if (t.tag) { <span class="chip-tag">{{ t.tag }}</span> }
+            @if (t.country) { <span class="chip-tag">{{ t.country }}</span> }
+            <span class="chip-tag">{{ t.region }}</span>
+            @if (t.founded_at) { <span>desde {{ t.founded_at | date: 'MM/yyyy' }}</span> }
+            @if (!t.is_active) { <span class="inactive">Inativo</span> }
+          </p>
+          @if (links().length) {
+            <ul class="social">
+              @for (l of links(); track l.kind) {
+                <li><a [class]="'s--' + l.kind" [href]="l.url" target="_blank" rel="noopener noreferrer">{{ l.label }}</a></li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container page layout">
+    <div class="main">
+      <section class="box">
+        <h2 class="box__title">Elenco atual</h2>
+        @if (t.roster.length) {
+          <ul class="roster">
+            @for (m of t.roster; track m.slug) {
+              <li>
+                <a class="member" [routerLink]="['/jogadores', m.slug]">
+                  @if (m.photo_url) {
+                    <img class="member__photo" [src]="m.photo_url" [alt]="'Foto de ' + m.nickname" width="72" height="72" loading="lazy" />
+                  } @else {
+                    <span class="member__photo member__photo--empty" aria-hidden="true">{{ initials(m.nickname) }}</span>
+                  }
+                  <span class="member__nick">{{ m.nickname }}</span>
+                  @if (m.real_name) { <span class="member__real">{{ m.real_name }}</span> }
+                  <span class="member__role">{{ m.role }}</span>
+                  <span class="member__since">desde {{ m.joined_at | date: 'dd/MM/yyyy' }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty">Sem jogadores no elenco no momento.</p>
+        }
+      </section>
+
+      @if (t.former.length) {
+        <section class="box">
+          <h2 class="box__title">Ex-integrantes</h2>
+          <table class="history">
+            <thead><tr><th>Jogador</th><th>Função</th><th>Período</th></tr></thead>
+            <tbody>
+              @for (m of t.former; track m.slug + m.joined_at) {
+                <tr>
+                  <td><a [routerLink]="['/jogadores', m.slug]">{{ m.nickname }}</a></td>
+                  <td>{{ m.role }}</td>
+                  <td>{{ m.joined_at | date: 'dd/MM/yyyy' }} → {{ m.left_at | date: 'dd/MM/yyyy' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+    </div>
+
+    <aside class="side">
+      @if (t.bio_md) {
+        <section class="box">
+          <h2 class="box__title">Sobre</h2>
+          <app-markdown [source]="t.bio_md" />
+        </section>
+      }
+      <section class="box">
+        <h2 class="box__title">Partidas</h2>
+        <p class="empty">Em breve: os jogos do time nos torneios importados do start.gg.</p>
+      </section>
+    </aside>
+  </div>
+}

@@ -1,0 +1,30 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, shareReplay } from 'rxjs';
+
+import { API_BASE_URL } from '../api.config';
+import { PlayerDetail, TeamCard, TeamDetail, TransferEvent } from '../models/scene.models';
+
+@Injectable({ providedIn: 'root' })
+export class SceneService {
+  private readonly http = inject(HttpClient);
+  private readonly api = inject(API_BASE_URL);
+
+  private readonly teams$ = this.http.get<TeamCard[]>(`${this.api}/teams`).pipe(shareReplay(1));
+
+  teams(): Observable<TeamCard[]> {
+    return this.teams$;
+  }
+
+  team(slug: string): Observable<TeamDetail> {
+    return this.http.get<TeamDetail>(`${this.api}/teams/${encodeURIComponent(slug)}`);
+  }
+
+  player(slug: string): Observable<PlayerDetail> {
+    return this.http.get<PlayerDetail>(`${this.api}/players/${encodeURIComponent(slug)}`);
+  }
+
+  transfers(limit = 100): Observable<TransferEvent[]> {
+    return this.http.get<TransferEvent[]>(`${this.api}/transfers?limit=${limit}`);
+  }
+}

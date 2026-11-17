@@ -1,0 +1,57 @@
+<section class="container page">
+  <header class="head">
+    <h1 class="title">Transferências</h1>
+    <p class="intro">Quem entrou e quem saiu dos times da cena brasileira, das mais recentes para as mais antigas.</p>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') { <p class="status">Carregando transferências…</p> }
+    @case ('error') {
+      <div class="notice">
+        <strong>Não deu para carregar as transferências.</strong>
+        <span>Tenta recarregar a página em alguns segundos.</span>
+      </div>
+    }
+    @default {
+      @if (events().length) {
+          <table class="table">
+            <thead>
+              <tr><th>Data</th><th>Jogador</th><th>Movimento</th><th>Time</th><th>Função</th></tr>
+            </thead>
+            <tbody>
+              @for (e of events(); track e.player.slug + e.team.slug + e.kind + e.date) {
+                <tr>
+                  <td class="date">{{ e.date | date: 'dd/MM/yyyy' }}</td>
+                  <td>
+                    <a class="player" [routerLink]="['/jogadores', e.player.slug]">
+                      @if (e.player.photo_url) {
+                        <img [src]="e.player.photo_url" alt="" width="28" height="28" loading="lazy" />
+                      } @else {
+                        <span class="mini" aria-hidden="true">{{ initials(e.player.nickname) }}</span>
+                      }
+                      {{ e.player.nickname }}
+                    </a>
+                  </td>
+                  <td>
+                    <span [class]="'move move--' + e.kind">{{ e.kind === 'join' ? 'Entrou em' : 'Saiu de' }}</span>
+                  </td>
+                  <td>
+                    <a class="team" [routerLink]="['/times', e.team.slug]">
+                      @if (e.team.logo_url) { <img [src]="e.team.logo_url" alt="" width="24" height="24" loading="lazy" /> }
+                      {{ e.team.name }}
+                    </a>
+                  </td>
+                  <td class="role">{{ e.role }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="notice">
+            <strong>Nenhuma transferência registrada ainda.</strong>
+            <span>Assim que os elencos dos times forem cadastrados, as entradas e saídas aparecem aqui.</span>
+          </div>
+      }
+    }
+  }
+</section>

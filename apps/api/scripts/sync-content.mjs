@@ -10,6 +10,8 @@
  *   content/herois/*.md    → "Como jogar" de cada herói (hero_guides)
  *   content/criadores/*.md → streamers e YouTubers BR (creators)
  *   content/noticias/*.md  → matérias da equipe (articles)
+ *   content/cena/times/*.md     → times e elencos (teams, player_team_history)
+ *   content/cena/jogadores/*.md → detalhes opcionais dos jogadores (players)
  *
  * Arquivos que começam com "_" (ex.: _modelo.md) são ignorados: servem de modelo.
  *
@@ -66,6 +68,37 @@
  *   published: true
  *   ---
  *   Texto em Markdown (aceita os atalhos {{heroi:...}}, {{item:...}} etc.).
+ *
+ * ── Time ────────────────────────────────────────────
+ *   ---
+ *   slug: nome-do-time
+ *   name: Nome do Time
+ *   tag: NDT                   ← sigla (até 6 letras)
+ *   country: BR
+ *   region: SA
+ *   logo: https://...          ← opcional
+ *   founded: 2026-01-10        ← opcional
+ *   active: true
+ *   twitch / youtube / x / discord / startgg   ← opcionais
+ *   ---
+ *   ## Sobre
+ *   Texto curto sobre o time.
+ *   ## Elenco
+ *   - slug-do-jogador | Nick | função | entrou (AAAA-MM-DD)
+ *   ## Ex-integrantes
+ *   - slug-do-jogador | Nick | função | entrou | saiu
+ *
+ * ── Jogador (opcional: só para foto, nome real, redes) ──
+ *   ---
+ *   slug: slug-do-jogador
+ *   nickname: Nick
+ *   real_name: Nome Real       ← opcional (só com autorização)
+ *   country: BR
+ *   steam: 7656119...          ← SteamID64, opcional
+ *   photo: https://...         ← opcional
+ *   twitch / youtube / x / startgg   ← opcionais
+ *   ---
+ *   Bio curta em Markdown.
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
@@ -78,6 +111,8 @@ const HEROES_DIR = join(CONTENT_ROOT, 'herois');
 const CREATORS_DIR = join(CONTENT_ROOT, 'criadores');
 const NEWS_DIR = join(CONTENT_ROOT, 'noticias');
 const NEWS_CATEGORIES = ['patch', 'guia', 'cenario', 'comunidade'];
+const TEAMS_DIR = join(CONTENT_ROOT, 'cena', 'times');
+const PLAYERS_DIR = join(CONTENT_ROOT, 'cena', 'jogadores');
 const DRY_RUN = process.argv.includes('--dry-run');
 const SLUG = /^[a-z0-9-]{1,60}$/;
 
@@ -302,6 +337,194 @@ async function writeArticles(db, articles) {
   if (error) throw new Error(`Erro ao gravar notícias: ${error.message}`);
 }
 
+// ───────────────────────── cena: times e jogadores ─────────────────────────
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const COUNTRY = /^[A-Z]{2}$/;
+
+function cleanHandle(file, key, value, re) {
+  let v = (value ?? '').trim().replace(/^https?:\/\/[^/]+\/(@)?/i, '').replace(/^@/, '').replace(/\/.*$/, '');
+  if (!v) return null;
+  if (!re.test(v)) throw new Error(`${file}: "${key}" inválido: "${value}" (use só o nome de usuário).`);
+  return v;
+}
+
+function checkDate(file, label, value) {
+  if (!DATE.test(value) || Number.isNaN(new Date(`${value}T12:00:00Z`).getTime())) {
+    throw new Error(`${file}: data inválida em ${label}: "${value}" (use AAAA-MM-DD).`);
+  }
+  return value;
+}
+
+/** Divide o corpo em seções "## Título" → { titulo normalizado: texto } */
+function sections(file, body, allowed) {
+  const out = {};
+  const parts = body.split(/^##[ \t]+(.+)$/m);
+  if (parts[0].trim()) throw new Error(`${file}: tem texto antes da primeira seção "## ...".`);
+  for (let i = 1; i < parts.length; i += 2) {
+    const key = norm(parts[i]);
+    if (!allowed.includes(key)) throw new Error(`${file}: seção "## ${parts[i].trim()}" não reconhecida. Use: ${allowed.join(', ')}.`);
+    out[key] = (parts[i + 1] ?? '').trim();
+  }
+  return out;
+}
+
+function parseRoster(file, text, former) {
+  const rows = [];
+  for (const line of (text ?? '').split('\n').map((l) => l.trim()).filter((l) => /^[-*]\s+/.test(l))) {
+    const cols = line.replace(/^[-*]\s+/, '').split('|').map((c) => c.trim());
+    const [slug, nickname, role, joined, left] = cols;
+    const where = `linha "${line}"`;
+    if (!SLUG.test(slug ?? '')) throw new Error(`${file}: slug do jogador inválido na ${where}.`);
+    if (!nickname || nickname.length > 40) throw new Error(`${file}: falta o nick na ${where}.`);
+    if (!role || role.length > 20) throw new Error(`${file}: falta a função (jogador, reserva, coach...) na ${where}.`);
+    checkDate(file, where, joined ?? '');
+    if (former) {
+      checkDate(file, where, left ?? '');
+      if (left < joined) throw new Error(`${file}: a saída é antes da entrada na ${where}.`);
+    } else if (left) {
+      throw new Error(`${file}: jogador do elenco atual não tem data de saída (mova para "## Ex-integrantes") na ${where}.`);
+    }
+    rows.push({ slug, nickname, role: role.toLowerCase(), joined_at: joined, left_at: former ? left : null });
+  }
+  return rows;
+}
+
+function parseTeam(file, raw) {
+  const { meta, body } = splitFrontMatter(file, raw);
+  if (!SLUG.test(meta.slug ?? '')) throw new Error(`${file}: "slug" inválido.`);
+  if (!meta.name || meta.name.length > 60) throw new Error(`${file}: "name" é obrigatório (até 60 caracteres).`);
+  if (meta.tag && !/^[A-Za-z0-9]{1,6}$/.test(meta.tag)) throw new Error(`${file}: "tag" deve ter até 6 letras/números.`);
+  const country = (meta.country || 'BR').toUpperCase();
+  if (!COUNTRY.test(country)) throw new Error(`${file}: "country" deve ter 2 letras (ex.: BR).`);
+  if (meta.logo && !/^https:\/\/\S+$/.test(meta.logo)) throw new Error(`${file}: "logo" precisa ser um link https.`);
+  if (meta.discord && !/^https:\/\/(discord\.gg|discord\.com)\/\S+$/.test(meta.discord)) throw new Error(`${file}: "discord" precisa ser um convite https://discord.gg/...`);
+  if (meta.founded) checkDate(file, '"founded"', meta.founded);
+
+  const sec = sections(file, body, ['sobre', 'elenco', 'ex-integrantes']);
+  const roster = [...parseRoster(file, sec['elenco'], false), ...parseRoster(file, sec['ex-integrantes'], true)];
+
+  return {
+    team: {
+      slug: meta.slug,
+      name: meta.name,
+      tag: meta.tag ? meta.tag.toUpperCase() : null,
+      region: (meta.region || 'SA').toUpperCase(),
+      country,
+      logo_url: meta.logo || null,
+      founded_at: meta.founded || null,
+      is_active: meta.active !== 'false',
+      bio_md: sec['sobre'] ?? '',
+      twitch: cleanHandle(file, 'twitch', meta.twitch, HANDLE.twitch),
+      youtube: cleanHandle(file, 'youtube', meta.youtube, HANDLE.youtube),
+      x_handle: cleanHandle(file, 'x', meta.x, HANDLE.x),
+      discord_url: meta.discord || null,
+      startgg_slug: meta.startgg || null,
+    },
+    roster,
+  };
+}
+
+function parsePlayer(file, raw) {
+  const { meta, body } = splitFrontMatter(file, raw);
+  if (!SLUG.test(meta.slug ?? '')) throw new Error(`${file}: "slug" inválido.`);
+  if (!meta.nickname || meta.nickname.length > 40) throw new Error(`${file}: "nickname" é obrigatório (até 40 caracteres).`);
+  const country = meta.country ? meta.country.toUpperCase() : null;
+  if (country && !COUNTRY.test(country)) throw new Error(`${file}: "country" deve ter 2 letras (ex.: BR).`);
+  if (meta.steam && !/^[0-9]{17}$/.test(meta.steam)) throw new Error(`${file}: "steam" deve ser o SteamID64 (17 números).`);
+  if (meta.photo && !/^https:\/\/\S+$/.test(meta.photo)) throw new Error(`${file}: "photo" precisa ser um link https.`);
+  if (body.length > 4000) throw new Error(`${file}: a bio passa de 4000 caracteres.`);
+  return {
+    slug: meta.slug,
+    nickname: meta.nickname,
+    real_name: meta.real_name || null,
+    country,
+    steam_id64: meta.steam || null,
+    photo_url: meta.photo || null,
+    bio_md: body,
+    twitch: cleanHandle(file, 'twitch', meta.twitch, HANDLE.twitch),
+    youtube: cleanHandle(file, 'youtube', meta.youtube, HANDLE.youtube),
+    x_handle: cleanHandle(file, 'x', meta.x, HANDLE.x),
+    startgg_slug: meta.startgg || null,
+  };
+}
+
+async function loadScene() {
+  const players = new Map();
+  for (const file of await listMarkdown(PLAYERS_DIR)) {
+    const p = parsePlayer(file, await readFile(join(PLAYERS_DIR, file), 'utf8'));
+    if (players.has(p.slug)) throw new Error(`Jogador com slug repetido: ${p.slug}`);
+    players.set(p.slug, p);
+  }
+
+  const teams = [];
+  for (const file of await listMarkdown(TEAMS_DIR)) teams.push(parseTeam(file, await readFile(join(TEAMS_DIR, file), 'utf8')));
+  const dupe = teams.find((t, i) => teams.findIndex((o) => o.team.slug === t.team.slug) !== i);
+  if (dupe) throw new Error(`Time com slug repetido: ${dupe.team.slug}`);
+
+  // Jogador citado no elenco sem arquivo próprio: cria com o nick da linha
+  const currentTeamOf = new Map();
+  for (const { team, roster } of teams) {
+    for (const r of roster) {
+      if (!players.has(r.slug)) {
+        players.set(r.slug, {
+          slug: r.slug, nickname: r.nickname, real_name: null, country: null, steam_id64: null, photo_url: null,
+          bio_md: '', twitch: null, youtube: null, x_handle: null, startgg_slug: null,
+        });
+      }
+      if (!r.left_at) {
+        const other = currentTeamOf.get(r.slug);
+        if (other && other !== team.slug) throw new Error(`"${r.slug}" está no elenco atual de dois times: ${other} e ${team.slug}.`);
+        currentTeamOf.set(r.slug, team.slug);
+      }
+    }
+  }
+  return { teams, players: [...players.values()] };
+}
+
+async function writeScene(db, scene) {
+  if (scene.teams.length === 0 && scene.players.length === 0) return;
+
+  if (scene.players.length) {
+    const { error } = await db.from('players').upsert(scene.players, { onConflict: 'slug' });
+    if (error) throw new Error(`Erro ao gravar jogadores: ${error.message} (a migration da cena já foi aplicada?)`);
+  }
+  if (scene.teams.length) {
+    const { error } = await db.from('teams').upsert(scene.teams.map((t) => t.team), { onConflict: 'slug' });
+    if (error) throw new Error(`Erro ao gravar times: ${error.message} (a migration da cena já foi aplicada?)`);
+  }
+
+  const [{ data: teamRows, error: tErr }, { data: playerRows, error: pErr }] = await Promise.all([
+    db.from('teams').select('id, slug'),
+    db.from('players').select('id, slug'),
+  ]);
+  if (tErr || pErr) throw new Error(`Erro ao ler a cena: ${(tErr ?? pErr).message}`);
+  const teamId = new Map(teamRows.map((r) => [r.slug, r.id]));
+  const playerId = new Map(playerRows.map((r) => [r.slug, r.id]));
+
+  // O histórico dos times que têm arquivo é refeito a partir dos arquivos
+  const ids = scene.teams.map((t) => teamId.get(t.team.slug));
+  if (ids.length) {
+    const { error } = await db.from('player_team_history').delete().in('team_id', ids);
+    if (error) throw new Error(`Erro ao limpar elencos: ${error.message}`);
+  }
+  const history = scene.teams.flatMap(({ team, roster }) =>
+    roster.map((r) => ({
+      player_id: playerId.get(r.slug),
+      team_id: teamId.get(team.slug),
+      role: r.role,
+      joined_at: r.joined_at,
+      left_at: r.left_at,
+    })),
+  );
+  if (history.length) {
+    const { error } = await db.from('player_team_history').insert(history);
+    if (error) throw new Error(`Erro ao gravar elencos: ${error.message}`);
+  }
+
+  const orphans = teamRows.filter((r) => !scene.teams.some((t) => t.team.slug === r.slug));
+  if (orphans.length) console.warn(`⚠️  Times no banco sem arquivo: ${orphans.map((o) => o.slug).join(', ')} (não alterados).`);
+}
+
 // ───────────────────────── gravação ─────────────────────────
 async function writeChapters(db, chapters) {
   const { data: existing, error: readErr } = await db.from('learn_chapters').select('slug, published_at');
@@ -399,6 +622,7 @@ async function main() {
   const guides = await loadHeroGuides();
   const creators = await loadCreators();
   const articles = await loadArticles();
+  const scene = await loadScene();
 
   console.log(`📚 ${chapters.length} capítulos em ${LEARN_DIR}`);
   for (const c of chapters) {
@@ -421,6 +645,12 @@ async function main() {
     console.log(`  ${a.slug.padEnd(28)} ${a.published ? 'publicada ' : 'rascunho  '} ${a.category}`);
   }
 
+  console.log(`\n🏆 ${scene.teams.length} times e ${scene.players.length} jogadores em ${join(CONTENT_ROOT, 'cena')}`);
+  for (const { team, roster } of scene.teams) {
+    const atual = roster.filter((r) => !r.left_at).length;
+    console.log(`  ${team.slug.padEnd(20)} ${team.tag ?? '—'}  ${atual} no elenco · ${roster.length - atual} ex-integrantes`);
+  }
+
   if (DRY_RUN) {
     console.log('\n(--dry-run) Nada foi gravado.');
     return;
@@ -437,6 +667,7 @@ async function main() {
   await writeHeroGuides(db, guides);
   await writeCreators(db, creators);
   await writeArticles(db, articles);
+  await writeScene(db, scene);
   console.log('\n✅ Conteúdo sincronizado.');
   await clearApiCache();
 }

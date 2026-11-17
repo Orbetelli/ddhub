@@ -1,0 +1,72 @@
+<section class="container page">
+  <header class="head">
+    <div>
+      <h1 class="title">Times</h1>
+      <p class="intro">Os times da cena brasileira de Deadlock, com elenco atual e histórico de quem já passou por eles.</p>
+    </div>
+    <a class="link-transfers" routerLink="/transferencias">Ver transferências »</a>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <ul class="grid">@for (g of ghosts; track g) { <li class="card card--skeleton"></li> }</ul>
+    }
+    @case ('error') {
+      <div class="notice">
+        <strong>Não deu para carregar os times.</strong>
+        <span>Tenta recarregar a página em alguns segundos.</span>
+      </div>
+    }
+    @default {
+      @if (active().length || inactive().length) {
+        <ul class="grid">
+          @for (t of active(); track t.slug) {
+            <li>
+              <a class="card" [routerLink]="['/times', t.slug]">
+                @if (t.logo_url) {
+                  <img class="logo" [src]="t.logo_url" [alt]="'Logo de ' + t.name" width="56" height="56" loading="lazy" />
+                } @else {
+                  <span class="logo" aria-hidden="true">{{ t.tag || initials(t.name) }}</span>
+                }
+                <span class="card__text">
+                  <span class="card__name">{{ t.name }}</span>
+                  <span class="card__meta">
+                    @if (t.tag) { <span class="chip-tag">{{ t.tag }}</span> }
+                    @if (t.country) { <span class="chip-tag">{{ t.country }}</span> }
+                    <span>{{ t.roster_count }} {{ t.roster_count === 1 ? 'jogador' : 'no elenco' }}</span>
+                  </span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+
+        @if (inactive().length) {
+          <h2 class="sub">Times inativos</h2>
+          <ul class="grid grid--inactive">
+            @for (t of inactive(); track t.slug) {
+              <li>
+                <a class="card" [routerLink]="['/times', t.slug]">
+                  @if (t.logo_url) {
+                    <img class="logo" [src]="t.logo_url" [alt]="'Logo de ' + t.name" width="56" height="56" loading="lazy" />
+                  } @else {
+                    <span class="logo" aria-hidden="true">{{ t.tag || initials(t.name) }}</span>
+                  }
+                  <span class="card__text">
+                    <span class="card__name">{{ t.name }}</span>
+                    <span class="card__meta">Inativo</span>
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <div class="notice">
+          <strong>A lista de times está sendo montada.</strong>
+          <span>Tem um time de Deadlock no Brasil? Em breve vai dar para cadastrar por aqui.</span>
+        </div>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,91 @@
+@switch (state().status) {
+  @case ('loading') { <p class="container status">Carregando jogador…</p> }
+  @case ('not-found') {
+    <section class="container status">
+      <h1>Jogador não encontrado</h1>
+      <a routerLink="/times" class="back">« Times</a>
+    </section>
+  }
+  @case ('error') {
+    <p class="container status">Não deu para carregar o jogador. Tenta recarregar a página em alguns segundos.</p>
+  }
+}
+
+@if (player(); as p) {
+  <div class="container page">
+    @if (p.current_team; as t) {
+      <a [routerLink]="['/times', t.slug]" class="back">« {{ t.name }}</a>
+    } @else {
+      <a routerLink="/times" class="back">« Times</a>
+    }
+
+    <header class="profile">
+      @if (p.photo_url) {
+        <img class="photo" [src]="p.photo_url" [alt]="'Foto de ' + p.nickname" width="120" height="120" />
+      } @else {
+        <span class="photo photo--empty" aria-hidden="true">{{ initials(p.nickname) }}</span>
+      }
+      <div>
+        <h1 class="nick">{{ p.nickname }}</h1>
+        @if (p.real_name) { <p class="real">{{ p.real_name }}</p> }
+        <p class="meta">
+          @if (p.country) { <span class="chip-tag">{{ p.country }}</span> }
+          @if (p.current_team; as t) {
+            <a class="team-link" [routerLink]="['/times', t.slug]">
+              @if (t.logo_url) { <img [src]="t.logo_url" alt="" width="22" height="22" /> }
+              {{ t.name }}
+            </a>
+            <span class="role">{{ t.role }}</span>
+          } @else {
+            <span class="free">Sem time</span>
+          }
+        </p>
+        @if (links().length) {
+          <ul class="social">
+            @for (l of links(); track l.kind) {
+              <li><a [class]="'s--' + l.kind" [href]="l.url" target="_blank" rel="noopener noreferrer">{{ l.label }}</a></li>
+            }
+          </ul>
+        }
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="box">
+        <h2 class="box__title">Histórico de times</h2>
+        @if (p.teams.length) {
+          <ol class="timeline">
+            @for (t of p.teams; track t.slug + t.joined_at) {
+              <li [class.current]="!t.left_at">
+                <a [routerLink]="['/times', t.slug]" class="tl-team">
+                  @if (t.logo_url) {
+                    <img [src]="t.logo_url" alt="" width="36" height="36" loading="lazy" />
+                  } @else {
+                    <span class="tl-logo" aria-hidden="true">{{ t.tag || initials(t.name) }}</span>
+                  }
+                  <span>
+                    <strong>{{ t.name }}</strong>
+                    <small>{{ t.role }}</small>
+                  </span>
+                </a>
+                <span class="tl-dates">
+                  {{ t.joined_at | date: 'dd/MM/yyyy' }} →
+                  @if (t.left_at) { {{ t.left_at | date: 'dd/MM/yyyy' }} } @else { <b>atual</b> }
+                </span>
+              </li>
+            }
+          </ol>
+        } @else {
+          <p class="empty">Ainda sem histórico de times.</p>
+        }
+      </section>
+
+      @if (p.bio_md) {
+        <section class="box">
+          <h2 class="box__title">Sobre</h2>
+          <app-markdown [source]="p.bio_md" />
+        </section>
+      }
+    </div>
+  </div>
+}
