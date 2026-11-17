@@ -12,6 +12,7 @@ import { LearnModule } from './learn/learn.module.js';
 import { CreatorsModule } from './creators/creators.module.js';
 import { TwitchModule } from './twitch/twitch.module.js';
 import { NewsModule } from './news/news.module.js';
+import { SceneModule } from './scene/scene.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -33,6 +34,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     LearnModule,
     TwitchModule,
     NewsModule,
+    SceneModule,
     CreatorsModule,
   ],
   controllers: [AppController],
