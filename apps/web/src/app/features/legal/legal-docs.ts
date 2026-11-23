@@ -5,7 +5,7 @@
  * Quando o login (Steam/Discord) for lançado, revise a seção "Conta" e mude UPDATED_AT.
  */
 export const CONTACT_EMAIL = 'COLOQUE-SEU-EMAIL-AQUI@gmail.com';
-export const UPDATED_AT = '23 de novembro de 2026';
+export const UPDATED_AT = '24 de novembro de 2026';
 
 export interface LegalDoc {
   title: string;
@@ -33,9 +33,16 @@ Nas páginas de **Cena** e **Criadores** mostramos informações **públicas**: 
 - **Nome real e foto pessoal** só aparecem com autorização da pessoa.
 - Se você aparece no site e quer **corrigir, completar ou remover** alguma informação, mande um e-mail para **${CONTACT_EMAIL}**. Respondemos em até 15 dias.
 
-## 4. Conta (quando o login estiver disponível)
+## 4. Conta (login com Steam)
 
-Quando lançarmos o login com **Steam** ou **Discord**, vamos receber dessas plataformas apenas: seu identificador público (SteamID ou ID do Discord), nome de usuário e avatar. **Não recebemos sua senha nem seu e-mail.** Também ficarão guardados o que você publicar no site (builds, tópicos e respostas no fórum). Esta política será atualizada antes do lançamento, com os detalhes.
+O login é feito **no site da própria Steam**: você digita a senha lá, nunca no DDhub. A Steam nos devolve só o seu **SteamID64** (número público da conta), e conferimos direto com a Steam que a resposta é verdadeira. Com esse número, buscamos na Steam o seu **nome e avatar públicos**.
+
+- **O que guardamos:** SteamID64, nome e avatar da Steam, um nome de usuário no DDhub e a data do último login. **Não recebemos sua senha, e-mail, lista de amigos nem dados de pagamento.**
+- **Cookie de sessão:** ao entrar, o site grava um cookie essencial (*ddhub_session*) para lembrar que você está logado, por até 30 dias. Ele é *httpOnly* (nenhum script consegue ler), e no nosso banco fica só uma versão embaralhada (hash) dele. Ao clicar em **Sair**, a sessão é apagada.
+- **Base legal:** execução do serviço que você pediu (art. 7º, V, da LGPD).
+- **Excluir a conta:** por enquanto, peça por **${CONTACT_EMAIL}** e apagamos seus dados em até 15 dias. Um botão de exclusão vai entrar na página da conta.
+
+Quando o login com **Discord** e o fórum entrarem no ar, esta seção será atualizada.
 
 ## 5. Serviços de terceiros
 
@@ -53,11 +60,11 @@ Pela LGPD (art. 18), você pode pedir a qualquer momento: confirmação de que t
 
 ## 7. Segurança e por quanto tempo guardamos
 
-Os dados ficam em serviços com acesso protegido e só o necessário é guardado. Informações de jogadores e times ficam enquanto fizerem parte da história do cenário, a menos que a pessoa peça a remoção. Dados de conta (quando houver) serão apagados se você excluir a conta.
+Os dados ficam em serviços com acesso protegido e só o necessário é guardado. Informações de jogadores e times ficam enquanto fizerem parte da história do cenário, a menos que a pessoa peça a remoção. Dados de conta são apagados se você excluir a conta. Sessões vencidas ou encerradas são apagadas automaticamente.
 
 ## 8. Crianças e adolescentes
 
-O DDhub não é voltado para crianças. Quando houver login, será preciso ter **13 anos ou mais**, e menores de 18 anos devem ter autorização dos responsáveis.
+O DDhub não é voltado para crianças. Para entrar com a Steam, é preciso ter **13 anos ou mais**, e menores de 18 anos devem ter autorização dos responsáveis.
 
 ## 9. Mudanças
 
@@ -79,9 +86,9 @@ Guias, traduções, textos e a organização do conteúdo são feitos pela equip
 
 Estatísticas, resultados e informações de torneios são reunidos de fontes públicas e podem conter erros. Achou algo errado? Avise em **${CONTACT_EMAIL}**.
 
-## 4. Contas e participação (quando disponível)
+## 4. Contas e participação
 
-Quando o login e o fórum estiverem no ar, ao publicar algo você:
+Você pode entrar com a sua conta Steam. Ao usar a conta e, quando o fórum estiver no ar, ao publicar algo, você:
 
 - precisa ter **13 anos ou mais** (menores de 18, com autorização dos responsáveis);
 - é responsável pelo que escreve;

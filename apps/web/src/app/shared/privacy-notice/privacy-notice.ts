@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 
 const STORAGE_KEY = 'ddhub.privacyNotice';
 /** Mude quando a política mudar de verdade (ex.: lançamento do login): o aviso aparece de novo. */
-const NOTICE_VERSION = '2026-11-23';
+const NOTICE_VERSION = '2026-11-24';
 
 /**
  * Aviso de privacidade no rodapé da tela. Não é um "aceite de cookies": o DDhub não usa
@@ -17,7 +17,7 @@ const NOTICE_VERSION = '2026-11-23';
     @if (visible()) {
       <aside class="notice" role="region" aria-label="Aviso de privacidade">
         <p class="notice__text">
-          O DDhub não usa cookies de rastreamento. Só guardamos no seu navegador a preferência de nomes (PT/EN).
+          O DDhub não usa cookies de rastreamento. Guardamos só a preferência de nomes (PT/EN) e, se você entrar com a Steam, um cookie essencial de sessão.
           <a routerLink="/privacidade">Política de Privacidade</a>
         </p>
         <button type="button" class="notice__btn" (click)="dismiss()">Entendi</button>
