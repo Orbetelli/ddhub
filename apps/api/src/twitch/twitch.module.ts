@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
 import { TwitchClient } from './twitch.client.js';
+import { KickClient } from './kick.client.js';
 import { LiveService } from './live.service.js';
 import { LiveController } from './live.controller.js';
 
@@ -8,7 +9,7 @@ import { LiveController } from './live.controller.js';
 @Global()
 @Module({
   controllers: [LiveController],
-  providers: [TwitchClient, LiveService],
+  providers: [TwitchClient, KickClient, LiveService],
   exports: [LiveService],
 })
 export class TwitchModule {}

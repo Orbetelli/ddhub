@@ -3,6 +3,8 @@
 export interface LiveStream {
   slug: string;
   name: string;
+  /** Onde é a live */
+  platform: 'twitch' | 'kick';
   twitch: string;
   avatar: string | null;
   title: string;

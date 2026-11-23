@@ -17,7 +17,7 @@
             <span class="row__title">{{ s.title }}</span>
           </span>
           <span class="row__viewers" [title]="s.viewers + ' espectadores'">{{ viewers(s.viewers) }}</span>
-          <span class="sr-only">(abre a live na Twitch em nova aba)</span>
+          <span class="sr-only">(abre a live na {{ s.platform === 'kick' ? 'Kick' : 'Twitch' }} em nova aba)</span>
         </a>
       </li>
     }
@@ -45,7 +45,7 @@
               <span class="stream__since">no ar desde {{ s.started_at | date: 'HH:mm' }}</span>
             </span>
           </span>
-          <span class="sr-only">(abre a live na Twitch em nova aba)</span>
+          <span class="sr-only">(abre a live na {{ s.platform === 'kick' ? 'Kick' : 'Twitch' }} em nova aba)</span>
         </a>
       </li>
     }

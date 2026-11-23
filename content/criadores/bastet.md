@@ -1,0 +1,14 @@
+---
+slug: bastet
+name: Bastet
+twitch: bastet
+youtube: 
+instagram:
+tiktok:
+kick: 
+x:
+avatar:
+tags: 
+published: false
+---
+<!-- RASCUNHO: confirmar se é do Brasil antes de publicar. -->

@@ -31,7 +31,7 @@ export class CreatorsController {
   async list(): Promise<Creator[]> {
     const creators = await this.cache.get('creators', TTL.content, () => this.load());
     // Sem foto no arquivo? Usa a da Twitch (atualizada pelo LiveService)
-    return creators.map((c) => (c.avatar_url ? c : { ...c, avatar_url: this.live.avatarFor(c.twitch) }));
+    return creators.map((c) => (c.avatar_url ? c : { ...c, avatar_url: this.live.avatarFor(c.twitch) ?? this.live.kickAvatarFor(c.kick) }));
   }
 
   private async load(): Promise<Creator[]> {

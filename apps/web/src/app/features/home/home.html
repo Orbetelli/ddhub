@@ -15,7 +15,7 @@
           </span>
           <span class="story__name">{{ s.name }}</span>
           <span class="story__viewers">{{ viewers(s.viewers) }}</span>
-          <span class="sr-only">(abre a live na Twitch em nova aba)</span>
+          <span class="sr-only">(abre a live na {{ s.platform === 'kick' ? 'Kick' : 'Twitch' }} em nova aba)</span>
         </a>
       }
       <a class="stories__more" routerLink="/criadores">Ver criadores →</a>
