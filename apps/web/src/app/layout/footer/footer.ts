@@ -11,6 +11,8 @@ import { RouterLink } from '@angular/router';
         <nav class="footer__links" aria-label="Rodapé">
           <a routerLink="/forum">Fórum</a>
           <a routerLink="/aprender">Comece por aqui</a>
+          <a routerLink="/privacidade">Privacidade</a>
+          <a routerLink="/termos">Termos de uso</a>
         </nav>
         <span>Site de fã, sem vínculo com a Valve.</span>
       </div>
@@ -32,7 +34,7 @@ import { RouterLink } from '@angular/router';
       padding-top: 18px;
       padding-bottom: 18px;
     }
-    .footer__links { display: flex; gap: 16px; }
+    .footer__links { display: flex; flex-wrap: wrap; gap: 8px 16px; }
   `,
 })
 export class Footer {}

@@ -14,6 +14,18 @@ const section = (path: string, heading: string, detailParam: string): Routes => 
 
 export const routes: Routes = [
   {
+    path: 'privacidade',
+    title: 'Política de Privacidade · DDhub',
+    loadComponent: () => import('./features/legal/legal-page').then((m) => m.LegalPage),
+    data: { kind: 'privacidade' },
+  },
+  {
+    path: 'termos',
+    title: 'Termos de Uso · DDhub',
+    loadComponent: () => import('./features/legal/legal-page').then((m) => m.LegalPage),
+    data: { kind: 'termos' },
+  },
+  {
     path: '',
     title: 'DDhub — Deadlock BR',
     loadComponent: () => import('./features/home/home').then((m) => m.Home),

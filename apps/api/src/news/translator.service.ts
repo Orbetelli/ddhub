@@ -7,7 +7,16 @@ const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 /** Modelo padrão; troque com GROQ_MODEL no .env sem mexer no código. */
 const DEFAULT_MODEL = 'openai/gpt-oss-120b';
 /** Tamanho máximo de cada pedaço enviado (patches grandes vão em partes). */
-const CHUNK_CHARS = 6000;
+const CHUNK_CHARS = 3500;
+/**
+ * Limite de tokens por minuto da conta do Groq (o gratuito do gpt-oss-120b é 8000).
+ * Se mudar de plano ou de modelo, ajuste com GROQ_TPM no .env.
+ */
+const DEFAULT_TPM = 8000;
+/** Quantas vezes tenta de novo quando o Groq responde 429 (limite). */
+const MAX_RETRIES = 4;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const SYSTEM_PROMPT = `Você traduz notas de atualização do jogo Deadlock (Valve) do inglês para o português do Brasil.
 
@@ -27,6 +36,9 @@ export class TranslatorService {
   private readonly logger = new Logger(TranslatorService.name);
   private terms: { at: number; list: string[] } | null = null;
   private warned = false;
+  private running = false;
+  /** Pedidos do último minuto: quando foram e quantos tokens (estimados) usaram. */
+  private window: { at: number; tokens: number }[] = [];
 
   constructor(private readonly supabase: SupabaseService) {}
 
@@ -38,6 +50,10 @@ export class TranslatorService {
     return process.env['GROQ_MODEL'] || DEFAULT_MODEL;
   }
 
+  private get tpm(): number {
+    return Number(process.env['GROQ_TPM']) || DEFAULT_TPM;
+  }
+
   /** Traduz até `max` anúncios ainda sem tradução (mais recentes primeiro). */
   async translatePending(max = 3): Promise<number> {
     if (!this.enabled) {
@@ -47,7 +63,17 @@ export class TranslatorService {
       }
       return 0;
     }
+    // Um patch grande pode levar alguns minutos (por causa das pausas): não deixa rodar duas vezes junto
+    if (this.running) return 0;
+    this.running = true;
+    try {
+      return await this.translateBatch(max);
+    } finally {
+      this.running = false;
+    }
+  }
 
+  private async translateBatch(max: number): Promise<number> {
     const { data, error } = await this.supabase.db
       .from('patch_notes')
       .select('gid, title, body_raw')
@@ -60,7 +86,9 @@ export class TranslatorService {
     for (const row of data ?? []) {
       try {
         const body = steamToMarkdown(row.body_raw ?? '');
-        const [title, bodyPt] = await Promise.all([this.translate(row.title), this.translateLong(body)]);
+        // Um pedido de cada vez, respeitando o limite de tokens por minuto
+        const title = await this.translate(row.title);
+        const bodyPt = await this.translateLong(body);
         const { error: upErr } = await this.supabase.db
           .from('patch_notes')
           .update({
@@ -95,24 +123,52 @@ export class TranslatorService {
     const terms = (await this.gameTerms()).filter((t) => text.includes(t));
     const user = terms.length ? `Termos do jogo (não traduzir): ${terms.join(', ')}\n\n---\n\n${text}` : text;
 
-    const res = await fetch(GROQ_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env['GROQ_API_KEY']}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: this.model,
-        temperature: 0.2,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: user },
-        ],
-      }),
-      signal: AbortSignal.timeout(90_000),
+    const body = JSON.stringify({
+      model: this.model,
+      temperature: 0.2,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: user },
+      ],
     });
-    if (!res.ok) throw new Error(`Groq respondeu ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    // Estimativa: ~3,5 caracteres por token, entrada + saída (a tradução tem tamanho parecido)
+    const estimate = Math.ceil((SYSTEM_PROMPT.length + user.length + text.length * 1.2) / 3.5);
+
+    let res: Response | null = null;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      await this.waitForBudget(estimate);
+      res = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env['GROQ_API_KEY']}`, 'Content-Type': 'application/json' },
+        body,
+        signal: AbortSignal.timeout(90_000),
+      });
+      this.window.push({ at: Date.now(), tokens: estimate });
+      if (res.status !== 429 || attempt === MAX_RETRIES) break;
+      // Limite estourado mesmo assim: espera o tempo que o Groq pedir (ou 20 s) e tenta de novo
+      const wait = Math.min(Number(res.headers.get('retry-after')) || 20, 90);
+      this.logger.log(`Groq pediu uma pausa: esperando ${wait}s (tentativa ${attempt + 1}/${MAX_RETRIES}).`);
+      await res.text();
+      await sleep(wait * 1000);
+    }
+    if (!res || !res.ok) throw new Error(`Groq respondeu ${res?.status}: ${(await res?.text())?.slice(0, 200)}`);
     const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const out = json.choices?.[0]?.message?.content?.trim();
     if (!out) throw new Error('Groq não devolveu texto.');
     return out;
+  }
+
+  /** Espera até caber mais `tokens` no limite de tokens por minuto (janela de 60 s). */
+  private async waitForBudget(tokens: number): Promise<void> {
+    const budget = this.tpm * 0.9; // folga de 10%
+    for (;;) {
+      const now = Date.now();
+      this.window = this.window.filter((w) => now - w.at < 60_000);
+      const used = this.window.reduce((sum, w) => sum + w.tokens, 0);
+      if (used + tokens <= budget || this.window.length === 0) return;
+      const wait = 60_000 - (now - this.window[0].at) + 250;
+      await sleep(Math.max(wait, 500));
+    }
   }
 
   /** Nomes em inglês de heróis, itens e habilidades (do nosso banco), em cache por 6 h. */
