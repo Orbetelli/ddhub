@@ -6,9 +6,10 @@ import { GameDataController } from './game-data.controller.js';
 import { AssetRefsController } from './asset-refs.controller.js';
 import { ItemsController } from './items.controller.js';
 import { MapController } from './map.controller.js';
+import { HeroStatsController } from './hero-stats.controller.js';
 
 @Module({
-  controllers: [GameDataController, AssetRefsController, ItemsController, MapController],
+  controllers: [GameDataController, AssetRefsController, ItemsController, MapController, HeroStatsController],
   providers: [DeadlockApiClient, GameSyncService],
   exports: [GameSyncService],
 })

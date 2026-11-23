@@ -2,81 +2,159 @@ import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of } from 'rxjs';
 
-import { PortalDataService } from '../../core/services/portal-data.service';
-import { ARTICLE_CATEGORY_LABEL, Article, Match } from '../../core/models/portal.models';
-import { Panel } from '../../shared/panel/panel';
-import { LiveNow } from '../../shared/live-now/live-now';
+import { NewsService } from '../../core/services/news.service';
+import { LiveService } from '../../core/services/live.service';
+import { SceneService } from '../../core/services/scene.service';
+import { StatsService } from '../../core/services/stats.service';
+import { CreatorsService } from '../../core/services/creators.service';
+import { ARTICLE_CATEGORY_LABEL, ArticleCategory } from '../../core/models/portal.models';
+import { NewsItem } from '../../core/models/news.models';
+import { Creator } from '../../core/models/creator.models';
+import { TeamCard, initials } from '../../core/models/scene.models';
+import { EMPTY_HERO_STATS } from '../../core/models/stats.models';
 
-interface MatchGroup {
-  key: 'live' | 'upcoming' | 'results';
-  label: string;
-  matches: Match[];
+/** Card da faixa "Em 30 segundos". */
+interface QuickCard {
+  key: string;
+  tag: string;
+  tone: ArticleCategory | 'meta';
+  big: string;
+  text: string;
+  link: string;
 }
 
-interface ArticleDay {
-  label: string;
-  articles: Article[];
+interface LearnLink {
+  time: string;
+  title: string;
+  link: string;
 }
+
+const DAY = 24 * 60 * 60 * 1000;
 
 @Component({
   selector: 'app-home',
-  imports: [Panel, RouterLink, DatePipe, LiveNow],
+  imports: [RouterLink, DatePipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
-  private readonly data = inject(PortalDataService);
+  private readonly newsService = inject(NewsService);
+  private readonly scene = inject(SceneService);
+  private readonly stats = inject(StatsService);
+  private readonly creatorsService = inject(CreatorsService);
+  protected readonly live = inject(LiveService);
 
   protected readonly categoryLabel = ARTICLE_CATEGORY_LABEL;
+  protected readonly initials = initials;
 
-  protected readonly matches = toSignal(this.data.getMatches(), { initialValue: [] });
-  protected readonly tournaments = toSignal(this.data.getTournaments(), { initialValue: [] });
-  protected readonly articles = toSignal(this.data.getLatestArticles(), { initialValue: [] });
-  protected readonly transfers = toSignal(this.data.getRecentTransfers(), { initialValue: [] });
-  protected readonly topics = toSignal(this.data.getHotTopics(), { initialValue: [] });
-  protected readonly heroes = toSignal(this.data.getTopHeroes(), { initialValue: [] });
-  protected readonly builds = toSignal(this.data.getTopBuilds(), { initialValue: [] });
-
-  /** Partidas agrupadas como na HLTV: ao vivo → próximas → resultados. */
-  protected readonly matchGroups = computed<MatchGroup[]>(() => {
-    const all = this.matches();
-    const byDate = (a: Match, b: Match) => a.scheduledAt.localeCompare(b.scheduledAt);
-    const groups: MatchGroup[] = [
-      { key: 'live', label: 'Ao vivo', matches: all.filter((m) => m.status === 'live') },
-      { key: 'upcoming', label: 'Próximas', matches: all.filter((m) => m.status === 'scheduled').sort(byDate) },
-      { key: 'results', label: 'Resultados', matches: all.filter((m) => m.status === 'finished').sort(byDate).reverse() },
-    ];
-    return groups.filter((g) => g.matches.length > 0);
+  private readonly news = toSignal(this.newsService.list().pipe(catchError(() => of<NewsItem[]>([]))), {
+    initialValue: [] as NewsItem[],
   });
+  private readonly teams = toSignal(this.scene.teams().pipe(catchError(() => of<TeamCard[]>([]))), {
+    initialValue: [] as TeamCard[],
+  });
+  private readonly creators = toSignal(this.creatorsService.list().pipe(catchError(() => of<Creator[]>([]))), {
+    initialValue: [] as Creator[],
+  });
+  private readonly heroStats = toSignal(this.stats.heroes(), { initialValue: EMPTY_HERO_STATS });
 
-  /** Matéria em destaque = a mais recente; as duas seguintes viram cards menores. */
-  protected readonly featured = computed(() => this.articles()[0] ?? null);
-  protected readonly secondary = computed(() => this.articles().slice(1, 3));
+  protected readonly patch = computed(() => this.newsService.meta().patch);
+  protected readonly loaded = computed(() => this.news().length > 0);
 
-  /** Lista de notícias agrupada por dia ("Hoje", "Ontem", "12 de nov."). */
-  protected readonly articleDays = computed<ArticleDay[]>(() => {
-    const days = new Map<string, Article[]>();
-    for (const article of this.articles().slice(3)) {
-      const label = this.dayLabel(article.publishedAt);
-      days.set(label, [...(days.get(label) ?? []), article]);
+  /** Quem está ao vivo (stories do topo). */
+  protected readonly streams = computed(() => this.live.snapshot().streams.slice(0, 10));
+
+  /** Destaque = notícia mais recente. */
+  protected readonly featured = computed(() => this.news()[0] ?? null);
+
+  /** Herói com maior win rate desde o patch. */
+  protected readonly topHero = computed(() => this.heroStats().heroes[0] ?? null);
+
+  /** Times ativos com mais gente no elenco. */
+  protected readonly topTeams = computed(() =>
+    this.teams()
+      .filter((t) => t.is_active)
+      .sort((a, b) => b.roster_count - a.roster_count || a.name.localeCompare(b.name, 'pt-BR'))
+      .slice(0, 3),
+  );
+
+  /** "Em 30 segundos": um número grande e uma frase. Montado só com dados reais. */
+  protected readonly quick = computed<QuickCard[]>(() => {
+    const cards: QuickCard[] = [];
+
+    for (const n of this.news().slice(1, 4)) {
+      cards.push({
+        key: `news-${n.slug}`,
+        tag: this.categoryLabel[n.category],
+        tone: n.category,
+        big: this.freshLabel(n.published_at),
+        text: n.title,
+        link: `/noticias/${n.slug}`,
+      });
     }
-    return [...days].map(([label, articles]) => ({ label, articles }));
+
+    const hero = this.topHero();
+    if (hero) {
+      cards.push({
+        key: 'hero',
+        tag: 'Meta',
+        tone: 'meta',
+        big: this.pct(hero.win_rate),
+        text: `${hero.name} tem o maior win rate no ${this.heroStats().badge} desde o patch`,
+        link: `/herois/${hero.slug}`,
+      });
+    }
+
+    const live = this.live.snapshot().streams.length;
+    const creators = this.creators().length;
+    if (live > 0) {
+      cards.push({ key: 'live', tag: 'Ao vivo', tone: 'comunidade', big: String(live), text: live === 1 ? 'criador BR ao vivo agora em Deadlock' : 'criadores BR ao vivo agora em Deadlock', link: '/criadores' });
+    } else if (creators > 0) {
+      cards.push({ key: 'creators', tag: 'Comunidade', tone: 'comunidade', big: String(creators), text: 'criadores BR de Deadlock pra você seguir', link: '/criadores' });
+    }
+
+    const teams = this.teams().filter((t) => t.is_active).length;
+    if (teams > 0) {
+      cards.push({ key: 'teams', tag: 'Cenário', tone: 'cenario', big: String(teams), text: teams === 1 ? 'time BR na Cena do DDhub' : 'times BR na Cena do DDhub', link: '/times' });
+    }
+
+    return cards;
   });
 
-  protected isWinner(match: Match, side: 1 | 2): boolean {
-    if (match.status !== 'finished') return false;
-    return side === 1 ? match.team1Score > match.team2Score : match.team2Score > match.team1Score;
+  protected readonly learn: LearnLink[] = [
+    { time: '2 min', title: 'O básico do jogo', link: '/aprender/o-basico' },
+    { time: '2 min', title: 'Como funcionam as lanes', link: '/aprender/lanes' },
+    { time: '2 min', title: 'Itens que todo mundo compra', link: '/aprender/itens' },
+    { time: '30 s', title: 'Glossário rápido', link: '/aprender/glossario' },
+  ];
+
+  protected pct(value: number): string {
+    return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
   }
 
-  private dayLabel(iso: string): string {
+  protected viewers(n: number): string {
+    return n >= 1000 ? `${(n / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil` : String(n);
+  }
+
+  /** "há 3 dias", "hoje"… para o selo do destaque. */
+  protected ago(iso: string): string {
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / DAY);
+    if (days <= 0) return 'hoje';
+    if (days === 1) return 'ontem';
+    return `há ${days} dias`;
+  }
+
+  /** Número grande dos cards de notícia: "NOVO" nas últimas 48h, senão a data. */
+  private freshLabel(iso: string): string {
     const date = new Date(iso);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
-    if (same(date, today)) return 'Hoje';
-    if (same(date, yesterday)) return 'Ontem';
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    if (Date.now() - date.getTime() < 2 * DAY) return 'NOVO';
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  }
+
+  /** Texto gigante ao fundo do destaque. */
+  protected backdrop(n: NewsItem): string {
+    return n.category === 'patch' ? 'PATCH' : this.categoryLabel[n.category].toUpperCase();
   }
 }

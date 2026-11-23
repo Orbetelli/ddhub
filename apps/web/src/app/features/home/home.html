@@ -1,157 +1,136 @@
 <div class="container home">
-  <!-- ================= ESQUERDA: partidas e torneios ================= -->
-  <aside class="col col--left" aria-label="Partidas e torneios">
-    <app-panel heading="Partidas" moreLink="/partidas" moreLabel="Todas as partidas »">
-      @for (group of matchGroups(); track group.key) {
-        <div class="list-subhead" [class.is-live]="group.key === 'live'">
-          @if (group.key === 'live') { <span class="live-dot" aria-hidden="true"></span> }
-          {{ group.label }}
-        </div>
-        @for (match of group.matches; track match.id) {
-          <a class="match" [routerLink]="['/partidas', match.id]">
-            <span class="match__team">{{ match.team1.name }}</span>
-            <span class="match__score" [class.is-win]="isWinner(match, 1)" [class.is-lose]="isWinner(match, 2)">
-              {{ match.status === 'scheduled' ? '' : match.team1Score }}
-            </span>
-            <span class="match__team">{{ match.team2.name }}</span>
-            <span class="match__score" [class.is-win]="isWinner(match, 2)" [class.is-lose]="isWinner(match, 1)">
-              {{ match.status === 'scheduled' ? '' : match.team2Score }}
-            </span>
-            <span class="match__meta">{{ match.tournament }}</span>
-            <span class="match__meta">
-              @switch (match.status) {
-                @case ('live') { Bo{{ match.bestOf }} }
-                @case ('scheduled') { {{ match.scheduledAt | date: 'HH:mm' }} }
-                @default { {{ match.scheduledAt | date: 'dd/MM' }} }
-              }
-            </span>
-          </a>
-        }
-      } @empty {
-        <p class="empty">Nenhuma partida por enquanto.</p>
-      }
-    </app-panel>
-
-    <app-panel heading="Torneios" moreLink="/torneios">
-      @for (t of tournaments(); track t.slug) {
-        <a class="list-row list-row--split" [routerLink]="['/torneios', t.slug]">
-          <span class="strong">{{ t.name }}</span>
-          <span class="meta">{{ t.statusLabel }}</span>
+  <!-- ============ AO VIVO (stories) ============ -->
+  @if (streams().length > 0) {
+    <section class="stories" aria-label="Criadores ao vivo agora">
+      <span class="stories__label"><span class="dot" aria-hidden="true"></span>Ao vivo</span>
+      @for (s of streams(); track s.slug) {
+        <a class="story" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">
+          <span class="story__ring">
+            @if (s.avatar) {
+              <img class="story__img" [src]="s.avatar" alt="" width="58" height="58" loading="lazy" />
+            } @else {
+              <span class="story__img story__img--empty" aria-hidden="true">{{ initials(s.name) }}</span>
+            }
+            <span class="story__badge">LIVE</span>
+          </span>
+          <span class="story__name">{{ s.name }}</span>
+          <span class="story__viewers">{{ viewers(s.viewers) }}</span>
+          <span class="sr-only">(abre a live na Twitch em nova aba)</span>
         </a>
       }
-    </app-panel>
-  </aside>
+      <a class="stories__more" routerLink="/criadores">Ver criadores →</a>
+    </section>
+  }
 
-  <!-- ================= CENTRO: destaque, iniciantes, notícias, builds ================= -->
-  <div class="col col--main">
+  <!-- ============ DESTAQUES (bento) ============ -->
+  <section class="bento" aria-label="Destaques">
     @if (featured(); as f) {
-      <div class="featured">
-        <a class="featured__main" [routerLink]="['/noticias', f.slug]">
-          @if (f.coverUrl) {
-            <img class="featured__cover" [src]="f.coverUrl" alt="" />
-          } @else {
-            <span class="featured__placeholder">[ arte da matéria ]</span>
-          }
-          <span class="featured__badge">{{ categoryLabel[f.category] }}</span>
-          <span class="featured__title">{{ f.title }}</span>
-        </a>
-        @for (a of secondary(); track a.slug) {
-          <a class="featured__small" [routerLink]="['/noticias', a.slug]">
-            <span class="tag tag--{{ a.category }}">{{ categoryLabel[a.category] }}</span>
-            <span class="featured__small-title">{{ a.title }}</span>
-          </a>
+      <a class="tile tile--hero" [routerLink]="['/noticias', f.slug]">
+        @if (f.cover_url) {
+          <img class="tile__cover" [src]="f.cover_url" alt="" />
+        } @else {
+          <span class="tile__backdrop" aria-hidden="true">{{ backdrop(f) }}</span>
         }
-      </div>
+        <span class="chips">
+          <span class="chip chip--{{ f.category }}">{{ categoryLabel[f.category] }}</span>
+          <span class="chip chip--muted">{{ ago(f.published_at) }}</span>
+        </span>
+        <span class="tile__title">{{ f.title }}</span>
+        @if (f.excerpt) {
+          <span class="tile__excerpt">{{ f.excerpt }}</span>
+        }
+      </a>
+    } @else {
+      <div class="tile tile--hero tile--skeleton" aria-hidden="true"></div>
     }
 
-    <section class="newbie" aria-labelledby="newbie-title">
-      <div class="newbie__intro">
-        <h2 id="newbie-title" class="newbie__title">Chegou agora?</h2>
-        <p class="newbie__text">Começa por aqui. É curto, prometo.</p>
-      </div>
-      <ol class="newbie__steps">
-        <li><a routerLink="/aprender/o-basico">O básico: lanes, almas e o mapa</a></li>
-        <li><a routerLink="/herois">Heróis bons pra começar</a></li>
-        <li><a routerLink="/aprender/itens">Itens que todo mundo compra</a></li>
-        <li><a routerLink="/aprender/glossario">Glossário (o que é “gank”, “farm”…)</a></li>
-      </ol>
-    </section>
+    @if (patch(); as p) {
+      <a class="tile tile--accent" [routerLink]="['/noticias', p.slug]">
+        <span class="tile__label">Patch atual</span>
+        <span class="tile__big">{{ p.published_at | date: 'dd/MM' }}</span>
+        <span class="tile__cta">Veja o que mudou →</span>
+      </a>
+    } @else {
+      <a class="tile tile--accent" routerLink="/noticias">
+        <span class="tile__label">Notícias</span>
+        <span class="tile__big">Patches</span>
+        <span class="tile__cta">Tudo o que mudou no jogo →</span>
+      </a>
+    }
 
-    <app-panel heading="Notícias" moreLink="/noticias" moreLabel="Arquivo de notícias »">
-      @for (day of articleDays(); track day.label) {
-        <div class="list-subhead">{{ day.label }}</div>
-        @for (a of day.articles; track a.slug) {
-          <a class="list-row" [routerLink]="['/noticias', a.slug]">
-            <span class="news__tag tag tag--{{ a.category }}">{{ categoryLabel[a.category] }}</span>
-            <span class="news__title">{{ a.title }}</span>
-            <span class="meta">{{ a.commentCount }} coment.</span>
+    @if (topHero(); as h) {
+      <a class="tile" [routerLink]="['/herois', h.slug]">
+        <span class="tile__label">Herói em alta · Phantom+</span>
+        <span class="tile__stat">
+          <span class="tile__big tile__big--win">{{ pct(h.win_rate) }}</span>
+          <span class="tile__hero">{{ h.name }}</span>
+        </span>
+        <span class="tile__note">win rate desde o patch · dados: Deadlock API</span>
+      </a>
+    } @else {
+      <a class="tile" routerLink="/herois">
+        <span class="tile__label">Heróis</span>
+        <span class="tile__big">Todos</span>
+        <span class="tile__note">habilidades, itens e como jogar com cada um</span>
+      </a>
+    }
+  </section>
+
+  <!-- ============ EM 30 SEGUNDOS ============ -->
+  @if (quick().length > 0) {
+    <section class="quick" aria-labelledby="quick-title">
+      <header class="section-head">
+        <h2 id="quick-title" class="section-title">Em 30 segundos</h2>
+        <span class="section-sub">o essencial da semana, arrasta pro lado</span>
+      </header>
+      <div class="rail">
+        @for (q of quick(); track q.key) {
+          <a class="qcard" [routerLink]="q.link">
+            <span class="chip chip--{{ q.tone }}">{{ q.tag }}</span>
+            <span class="qcard__big">{{ q.big }}</span>
+            <span class="qcard__text">{{ q.text }}</span>
           </a>
         }
-      }
-    </app-panel>
-
-    <app-panel heading="Builds da galera" moreLink="/builds" moreLabel="Ver todas as builds »">
-      <a panel-action routerLink="/builds" fragment="nova">+ Criar build</a>
-      <div class="table-wrap">
-        <table class="builds">
-          <thead>
-            <tr>
-              <th scope="col">Herói</th>
-              <th scope="col">Build</th>
-              <th scope="col">Autor</th>
-              <th scope="col" class="num">Votos</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (b of builds(); track b.id) {
-              <tr>
-                <td class="strong">{{ b.hero }}</td>
-                <td><a [routerLink]="['/builds', b.id]">{{ b.title }}</a></td>
-                <td class="muted">{{ b.author }}</td>
-                <td class="num accent">{{ b.score }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
       </div>
-    </app-panel>
-  </div>
+    </section>
+  }
 
-  <!-- ================= DIREITA: fórum, transferências, heróis ================= -->
-  <aside class="col col--right" aria-label="Comunidade">
-    <app-panel heading="Ao vivo agora" moreLink="/criadores" moreLabel="Todos os criadores »">
-      <app-live-now variant="compact" [limit]="5" />
-    </app-panel>
-
-    <app-panel heading="Fórum agora" moreLink="/forum" moreLabel="Ir pro fórum »">
-      @for (t of topics(); track t.id) {
-        <a class="list-row list-row--split" [routerLink]="['/forum', t.id]">
-          <span class="topic__title">{{ t.title }}</span>
-          <span class="meta strong">{{ t.replyCount }}</span>
-        </a>
-      }
-    </app-panel>
-
-    <app-panel heading="Transferências" moreLink="/transferencias" moreLabel="Todas »">
-      @for (t of transfers(); track t.id) {
-        <div class="transfer">
-          <span class="strong">{{ t.player }}</span>
-          <span class="transfer__path">
-            {{ t.from ?? 'sem time' }} <span class="accent" aria-hidden="true">→</span><span class="sr-only">para</span> {{ t.to ?? 'sem time' }}
+  <!-- ============ CENA + APRENDER ============ -->
+  <section class="duo">
+    <div class="box">
+      <header class="box__head">
+        <h2 class="box__title">Cena BR</h2>
+        <a class="box__link" routerLink="/times">Times e transferências →</a>
+      </header>
+      @for (t of topTeams(); track t.slug) {
+        <a class="team" [routerLink]="['/times', t.slug]">
+          @if (t.logo_url) {
+            <img class="team__logo" [src]="t.logo_url" alt="" width="52" height="52" loading="lazy" />
+          } @else {
+            <span class="team__logo team__logo--tag" aria-hidden="true">{{ t.tag || initials(t.name) }}</span>
+          }
+          <span class="team__info">
+            <span class="team__name">{{ t.name }}</span>
+            <span class="team__meta">{{ t.roster_count }} no elenco</span>
           </span>
-        </div>
-      }
-    </app-panel>
-
-    <app-panel heading="Mais jogados (rank alto)" moreLink="/herois" moreLabel="Todos os heróis »">
-      @for (h of heroes(); track h.slug; let i = $index) {
-        <a class="list-row hero" [routerLink]="['/herois', h.slug]">
-          <span class="hero__pos">{{ i + 1 }}</span>
-          <span class="hero__name">{{ h.name }}</span>
-          <span class="meta">{{ h.winRate === null ? '—' : (h.winRate + '%') }}</span>
+          <span class="team__go" aria-hidden="true">→</span>
         </a>
+      } @empty {
+        <p class="box__empty">Os times brasileiros aparecem aqui em breve.</p>
       }
-      <p class="source">dados: Deadlock API</p>
-    </app-panel>
-  </aside>
+      <p class="box__note">Partidas e torneios chegam em breve, direto do start.gg.</p>
+    </div>
+
+    <div class="box box--cream">
+      <h2 class="box__title">Chegou agora? Aprende em 5 min</h2>
+      <div class="learn">
+        @for (l of learn; track l.link) {
+          <a class="learn__item" [routerLink]="l.link">
+            <span class="learn__time">{{ l.time }}</span>
+            <span class="learn__title">{{ l.title }}</span>
+          </a>
+        }
+      </div>
+    </div>
+  </section>
 </div>
