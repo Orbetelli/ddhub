@@ -99,6 +99,24 @@
  *   twitch / youtube / x / startgg   ← opcionais
  *   ---
  *   Bio curta em Markdown.
+ *
+ * ── Torneio (content/cena/torneios) ────────────────
+ *   ---
+ *   slug: copa-america-2026
+ *   name: Deadlock Premier Copa America
+ *   organizer / tier / region   ← opcionais
+ *   prize: 400                 ← premiação total em US$ (opcional)
+ *   teams: 9                   ← número de times (opcional)
+ *   starts: 2026-11-14   ends: 2026-11-15
+ *   url: https://...           ← página do torneio (Liquipedia, site do organizador)
+ *   startgg: tournament/<t>/event/<e>   ← opcional: importa partidas do start.gg
+ *   ---
+ *   ## Sobre
+ *   ## Classificação
+ *   - 1 | requiem | 100        ← colocação | slug do time OU nome livre | prêmio (opcional)
+ *   ## Partidas
+ *   - 2026-11-15 19:00 | Final | Bo3 | Brasil | 2-1 | Estados Unidos | https://twitch.tv/...
+ *     (placar "vs" = partida futura, "1-0*" = ao vivo; horário de Brasília)
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
@@ -113,6 +131,7 @@ const NEWS_DIR = join(CONTENT_ROOT, 'noticias');
 const NEWS_CATEGORIES = ['patch', 'guia', 'cenario', 'comunidade'];
 const TEAMS_DIR = join(CONTENT_ROOT, 'cena', 'times');
 const PLAYERS_DIR = join(CONTENT_ROOT, 'cena', 'jogadores');
+const TOURNAMENTS_DIR = join(CONTENT_ROOT, 'cena', 'torneios');
 const DRY_RUN = process.argv.includes('--dry-run');
 const SLUG = /^[a-z0-9-]{1,60}$/;
 
@@ -525,6 +544,273 @@ async function writeScene(db, scene) {
   if (orphans.length) console.warn(`⚠️  Times no banco sem arquivo: ${orphans.map((o) => o.slug).join(', ')} (não alterados).`);
 }
 
+// ───────────────────────── cena: torneios e partidas ─────────────────────────
+const STARTGG_URL = 'https://api.start.gg/gql/alpha';
+const BEST_OF = [1, 3, 5, 7];
+
+/** "requiem" (slug de time cadastrado) → { slug }; qualquer outro texto → { name } */
+function teamRef(value, teamSlugs) {
+  const v = (value ?? '').trim();
+  if (!v) return null;
+  if (teamSlugs.has(v)) return { slug: v, name: null };
+  if (v.length > 60) return null;
+  return { slug: null, name: v };
+}
+
+function parsePlacements(file, text, teamSlugs) {
+  const rows = [];
+  for (const line of (text ?? '').split('\n').map((l) => l.trim()).filter((l) => /^[-*]\s+/.test(l))) {
+    const [place, team, prize] = line.replace(/^[-*]\s+/, '').split('|').map((c) => c.trim());
+    const where = `linha "${line}"`;
+    if (!/^\d{1,3}(-\d{1,3})?$/.test(place ?? '')) throw new Error(`${file}: colocação inválida na ${where} (use 1, 2, 3-4, 5-8...).`);
+    const ref = teamRef(team, teamSlugs);
+    if (!ref) throw new Error(`${file}: falta o time na ${where}.`);
+    let prize_usd = null;
+    if (prize) {
+      prize_usd = Number(prize.replace(/[$\s]/g, '').replace(',', '.'));
+      if (!Number.isFinite(prize_usd) || prize_usd < 0) throw new Error(`${file}: prêmio inválido na ${where} (ex.: 100 ou $100).`);
+    }
+    rows.push({ place, ...ref, prize_usd });
+  }
+  return rows;
+}
+
+function parseMatches(file, text, teamSlugs) {
+  const rows = [];
+  for (const line of (text ?? '').split('\n').map((l) => l.trim()).filter((l) => /^[-*]\s+/.test(l))) {
+    const [when, stage, bo, a, score, b, stream] = line.replace(/^[-*]\s+/, '').split('|').map((c) => c.trim());
+    const where = `linha "${line}"`;
+    const m = /^(\d{4}-\d{2}-\d{2})(?:\s+(\d{2}):(\d{2}))?$/.exec(when ?? '');
+    if (!m) throw new Error(`${file}: data inválida na ${where} (use AAAA-MM-DD ou AAAA-MM-DD HH:MM, horário de Brasília).`);
+    checkDate(file, where, m[1]);
+    const scheduled_at = `${m[1]}T${m[2] ?? '12'}:${m[3] ?? '00'}:00-03:00`;
+    const best_of = Number((bo ?? '').replace(/^bo/i, ''));
+    if (!BEST_OF.includes(best_of)) throw new Error(`${file}: formato inválido na ${where} (use Bo1, Bo3, Bo5 ou Bo7).`);
+    const t1 = teamRef(a, teamSlugs);
+    const t2 = teamRef(b, teamSlugs);
+    if (!t1 || !t2) throw new Error(`${file}: falta um dos times na ${where}.`);
+    let status = 'scheduled';
+    let s1 = 0;
+    let s2 = 0;
+    const sc = /^(\d{1,2})\s*-\s*(\d{1,2})\s*(\*)?$/.exec(score ?? '');
+    if (sc) {
+      s1 = Number(sc[1]);
+      s2 = Number(sc[2]);
+      status = sc[3] ? 'live' : 'finished';
+      const need = Math.ceil(best_of / 2);
+      if (s1 > need || s2 > need) throw new Error(`${file}: placar maior que o possível num Bo${best_of} na ${where}.`);
+      if (status === 'finished' && s1 === s2) throw new Error(`${file}: partida terminada empatada na ${where} (ao vivo? use 1-1*).`);
+    } else if (!/^(vs|x|-|)$/i.test(score ?? '')) {
+      throw new Error(`${file}: placar inválido na ${where} (use 2-1, 1-0* para ao vivo, ou vs para partida futura).`);
+    }
+    if (stream && !/^https:\/\/\S+$/.test(stream)) throw new Error(`${file}: link da transmissão precisa ser https na ${where}.`);
+    rows.push({
+      scheduled_at, stage: stage && stage !== '-' ? stage : null, best_of, status,
+      team1: t1, team2: t2, team1_score: s1, team2_score: s2, stream_url: stream || null,
+      source: 'content', external_id: null,
+    });
+  }
+  return rows;
+}
+
+function parseTournament(file, raw, teamSlugs) {
+  const { meta, body } = splitFrontMatter(file, raw);
+  if (!SLUG.test(meta.slug ?? '')) throw new Error(`${file}: "slug" inválido.`);
+  if (!meta.name || meta.name.length > 80) throw new Error(`${file}: "name" é obrigatório (até 80 caracteres).`);
+  if (meta.starts) checkDate(file, '"starts"', meta.starts);
+  if (meta.ends) checkDate(file, '"ends"', meta.ends);
+  if (meta.starts && meta.ends && meta.ends < meta.starts) throw new Error(`${file}: "ends" é antes de "starts".`);
+  if (meta.url && !/^https:\/\/\S+$/.test(meta.url)) throw new Error(`${file}: "url" precisa ser um link https.`);
+  if (meta.logo && !/^https:\/\/\S+$/.test(meta.logo)) throw new Error(`${file}: "logo" precisa ser um link https.`);
+  const prize = meta.prize ? Number(String(meta.prize).replace(/[$\s]/g, '').replace(',', '.')) : null;
+  if (prize !== null && (!Number.isFinite(prize) || prize < 0)) throw new Error(`${file}: "prize" inválido (ex.: 200).`);
+  const teams = meta.teams ? Number(meta.teams) : null;
+  if (teams !== null && (!Number.isInteger(teams) || teams < 0)) throw new Error(`${file}: "teams" deve ser um número inteiro.`);
+  if (meta.startgg && !/^tournament\/[a-z0-9-]+\/event\/[a-z0-9-]+$/.test(meta.startgg)) {
+    throw new Error(`${file}: "startgg" deve ser tournament/<torneio>/event/<evento> (copie da URL do evento no start.gg).`);
+  }
+  const sec = sections(file, body, ['sobre', 'classificacao', 'partidas']);
+  return {
+    tournament: {
+      slug: meta.slug,
+      name: meta.name,
+      organizer: meta.organizer || null,
+      tier: meta.tier || null,
+      region: meta.region || null,
+      prize_pool_usd: prize,
+      teams_count: teams,
+      starts_at: meta.starts || null,
+      ends_at: meta.ends || null,
+      external_url: meta.url || null,
+      logo_url: meta.logo || null,
+      startgg_slug: meta.startgg || null,
+      bio_md: sec['sobre'] ?? '',
+    },
+    placements: parsePlacements(file, sec['classificacao'], teamSlugs),
+    matches: parseMatches(file, sec['partidas'], teamSlugs),
+  };
+}
+
+// ── start.gg (opcional): partidas e classificação de um evento ──
+const STARTGG_QUERY = `query DDhubEvent($slug: String!, $page: Int!) {
+  event(slug: $slug) {
+    name
+    numEntrants
+    standings(query: { page: 1, perPage: 32 }) { nodes { placement entrant { name } } }
+    sets(page: $page, perPage: 50, sortType: CALL_ORDER) {
+      pageInfo { totalPages }
+      nodes {
+        id fullRoundText startAt completedAt state winnerId
+        slots { entrant { id name } standing { stats { score { value } } } }
+      }
+    }
+  }
+}`;
+
+async function startggEvent(slug) {
+  const token = process.env.STARTGG_TOKEN;
+  if (!token) return null;
+  const sets = [];
+  let standings = [];
+  let numEntrants = null;
+  for (let page = 1; page <= 20; page++) {
+    const res = await fetch(STARTGG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'User-Agent': 'DDhub/0.1' },
+      body: JSON.stringify({ query: STARTGG_QUERY, variables: { slug, page } }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) throw new Error(`start.gg respondeu ${res.status} para ${slug}`);
+    const json = await res.json();
+    if (json.errors?.length) throw new Error(`start.gg: ${json.errors[0].message}`);
+    const ev = json.data?.event;
+    if (!ev) throw new Error(`start.gg: evento não encontrado (${slug})`);
+    numEntrants = ev.numEntrants ?? numEntrants;
+    if (page === 1) standings = ev.standings?.nodes ?? [];
+    sets.push(...(ev.sets?.nodes ?? []));
+    if (page >= (ev.sets?.pageInfo?.totalPages ?? 1)) break;
+  }
+  return { sets, standings, numEntrants };
+}
+
+/** Converte o evento do start.gg nas mesmas linhas dos arquivos (o arquivo sempre tem prioridade). */
+async function mergeStartgg(file, t, teamSlugs, teamByName) {
+  if (!t.tournament.startgg_slug) return;
+  if (!process.env.STARTGG_TOKEN) {
+    console.warn(`⚠️  ${file}: tem "startgg" mas falta STARTGG_TOKEN no .env (usando só o arquivo).`);
+    return;
+  }
+  const ev = await startggEvent(t.tournament.startgg_slug);
+  const ref = (name) => {
+    const slug = teamByName.get(norm(name ?? ''));
+    return slug ? { slug, name: null } : teamRef(name, teamSlugs) ?? { slug: null, name: 'A definir' };
+  };
+  if (t.matches.length === 0) {
+    for (const s of ev.sets) {
+      const [a, b] = s.slots ?? [];
+      if (!a?.entrant || !b?.entrant) continue; // vaga ainda indefinida
+      const s1 = Math.max(0, Number(a.standing?.stats?.score?.value ?? 0));
+      const s2 = Math.max(0, Number(b.standing?.stats?.score?.value ?? 0));
+      const done = s.state === 3 || !!s.winnerId;
+      const live = s.state === 2;
+      const ts = s.startAt ?? s.completedAt;
+      const bo = BEST_OF.find((n) => Math.ceil(n / 2) >= Math.max(s1, s2, 1)) ?? 3;
+      t.matches.push({
+        scheduled_at: ts ? new Date(ts * 1000).toISOString() : `${t.tournament.starts_at ?? new Date().toISOString().slice(0, 10)}T12:00:00-03:00`,
+        stage: s.fullRoundText || null,
+        best_of: bo,
+        status: done ? 'finished' : live ? 'live' : 'scheduled',
+        team1: ref(a.entrant.name), team2: ref(b.entrant.name),
+        team1_score: s1, team2_score: s2, stream_url: null,
+        source: 'startgg', external_id: `startgg:${s.id}`,
+      });
+    }
+  }
+  if (t.placements.length === 0) {
+    for (const st of ev.standings) {
+      if (st.entrant?.name) t.placements.push({ place: String(st.placement), ...ref(st.entrant.name), prize_usd: null });
+    }
+  }
+  if (t.tournament.teams_count === null && ev.numEntrants) t.tournament.teams_count = ev.numEntrants;
+  console.log(`  ↳ start.gg: ${ev.sets.length} partidas, ${ev.standings.length} colocações (${t.tournament.startgg_slug})`);
+}
+
+async function loadTournaments(scene) {
+  const teamSlugs = new Set(scene.teams.map((t) => t.team.slug));
+  // Nomes e siglas dos times cadastrados, para reconhecer os do start.gg
+  const teamByName = new Map();
+  for (const { team } of scene.teams) {
+    teamByName.set(norm(team.name), team.slug);
+    if (team.tag) teamByName.set(norm(team.tag), team.slug);
+  }
+  const list = [];
+  for (const file of await listMarkdown(TOURNAMENTS_DIR)) {
+    const t = parseTournament(file, await readFile(join(TOURNAMENTS_DIR, file), 'utf8'), teamSlugs);
+    await mergeStartgg(file, t, teamSlugs, teamByName);
+    list.push(t);
+  }
+  const dupe = list.find((t, i) => list.findIndex((o) => o.tournament.slug === t.tournament.slug) !== i);
+  if (dupe) throw new Error(`Torneio com slug repetido: ${dupe.tournament.slug}`);
+  return list;
+}
+
+async function writeTournaments(db, list) {
+  if (list.length === 0) return;
+  const { error: upErr } = await db.from('tournaments').upsert(list.map((t) => t.tournament), { onConflict: 'slug' });
+  if (upErr) throw new Error(`Erro ao gravar torneios: ${upErr.message} (a migration de torneios já foi aplicada?)`);
+
+  const [{ data: tRows, error: tErr }, { data: teamRows, error: teamErr }] = await Promise.all([
+    db.from('tournaments').select('id, slug'),
+    db.from('teams').select('id, slug'),
+  ]);
+  if (tErr || teamErr) throw new Error(`Erro ao ler torneios: ${(tErr ?? teamErr).message}`);
+  const tournamentId = new Map(tRows.map((r) => [r.slug, r.id]));
+  const teamId = new Map(teamRows.map((r) => [r.slug, r.id]));
+  const ids = list.map((t) => tournamentId.get(t.tournament.slug));
+
+  // Classificação e partidas dos torneios com arquivo são refeitas a cada sync
+  for (const table of ['tournament_placements', 'matches']) {
+    const { error } = await db.from(table).delete().in('tournament_id', ids);
+    if (error) throw new Error(`Erro ao limpar ${table}: ${error.message}`);
+  }
+
+  const side = (ref) => ({ id: ref.slug ? (teamId.get(ref.slug) ?? null) : null, name: ref.slug ? null : ref.name });
+  const placements = list.flatMap((t) =>
+    t.placements.map((p, i) => {
+      const s = side(p);
+      return {
+        tournament_id: tournamentId.get(t.tournament.slug), position: i + 1, place: p.place,
+        team_id: s.id, team_name: p.name ?? p.slug, prize_usd: p.prize_usd,
+      };
+    }),
+  );
+  if (placements.length) {
+    const { error } = await db.from('tournament_placements').insert(placements);
+    if (error) throw new Error(`Erro ao gravar classificação: ${error.message}`);
+  }
+
+  const matches = list.flatMap((t) =>
+    t.matches.map((m) => {
+      const a = side(m.team1);
+      const b = side(m.team2);
+      let winner_id = null;
+      if (m.status === 'finished') winner_id = m.team1_score > m.team2_score ? a.id : b.id;
+      return {
+        tournament_id: tournamentId.get(t.tournament.slug),
+        team1_id: a.id, team1_name: a.id ? null : (a.name ?? m.team1.slug),
+        team2_id: b.id, team2_name: b.id ? null : (b.name ?? m.team2.slug),
+        best_of: m.best_of, stage: m.stage, scheduled_at: m.scheduled_at, status: m.status,
+        team1_score: m.team1_score, team2_score: m.team2_score, winner_id,
+        stream_url: m.stream_url, source: m.source, external_id: m.external_id,
+      };
+    }),
+  );
+  if (matches.length) {
+    const { error } = await db.from('matches').insert(matches);
+    if (error) throw new Error(`Erro ao gravar partidas: ${error.message}`);
+  }
+}
+
 // ───────────────────────── gravação ─────────────────────────
 async function writeChapters(db, chapters) {
   const { data: existing, error: readErr } = await db.from('learn_chapters').select('slug, published_at');
@@ -623,6 +909,7 @@ async function main() {
   const creators = await loadCreators();
   const articles = await loadArticles();
   const scene = await loadScene();
+  const tournaments = await loadTournaments(scene);
 
   console.log(`📚 ${chapters.length} capítulos em ${LEARN_DIR}`);
   for (const c of chapters) {
@@ -651,6 +938,11 @@ async function main() {
     console.log(`  ${team.slug.padEnd(20)} ${team.tag ?? '—'}  ${atual} no elenco · ${roster.length - atual} ex-integrantes`);
   }
 
+  console.log(`\n🏟️  ${tournaments.length} torneios em ${TOURNAMENTS_DIR}`);
+  for (const { tournament: t, placements, matches } of tournaments) {
+    console.log(`  ${t.slug.padEnd(28)} ${String(placements.length).padStart(2)} colocações · ${String(matches.length).padStart(2)} partidas`);
+  }
+
   if (DRY_RUN) {
     console.log('\n(--dry-run) Nada foi gravado.');
     return;
@@ -668,6 +960,7 @@ async function main() {
   await writeCreators(db, creators);
   await writeArticles(db, articles);
   await writeScene(db, scene);
+  await writeTournaments(db, tournaments);
   console.log('\n✅ Conteúdo sincronizado.');
   await clearApiCache();
 }
