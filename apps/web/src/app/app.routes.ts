@@ -78,10 +78,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/items/item-detail/item-detail').then((m) => m.ItemDetail),
   },
   {
-    path: 'adivinhe',
-    title: 'Adivinhe o herói · DDhub',
-    loadComponent: () => import('./features/daily/daily-game').then((m) => m.DailyGame),
+    path: 'diario',
+    title: 'DDhub Diário · DDhub',
+    loadComponent: () => import('./features/daily/daily-page').then((m) => m.DailyPage),
   },
+  // Endereço da 1ª versão do jogo
+  { path: 'adivinhe', redirectTo: 'diario' },
   {
     path: 'videos',
     title: 'Vídeos BR · DDhub',

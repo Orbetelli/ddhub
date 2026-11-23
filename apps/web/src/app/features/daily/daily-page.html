@@ -1,0 +1,46 @@
+<section class="daily">
+  <header class="head">
+    <div>
+      <p class="kicker">Desafio diário #{{ number }}</p>
+      <h1>DDhub Diário</h1>
+      <p class="sub">4 desafios por dia, iguais para todo mundo. Novos em <strong>{{ countdown() }}</strong>.</p>
+    </div>
+    <button class="share" type="button" (click)="share()" [disabled]="!doneCount()">
+      {{ copied() ? 'Copiado!' : 'Compartilhar ' + doneCount() + '/4' }}
+    </button>
+  </header>
+
+  <nav class="tabs" aria-label="Modos do desafio">
+    @for (m of modes; track m.mode) {
+      <a
+        [routerLink]="[]"
+        [queryParams]="{ modo: m.mode === 'habilidade' ? null : m.mode }"
+        [class.active]="current() === m.mode"
+        [attr.aria-current]="current() === m.mode ? 'page' : null"
+      >
+        {{ m.label }} <span class="badge">{{ badge(m.mode) }}</span>
+      </a>
+    }
+  </nav>
+
+  <p class="question">{{ question() }}</p>
+
+  @switch (current()) {
+    @case ('habilidade') {
+      <app-choice-game mode="habilidade" (finishedChange)="refresh()" />
+    }
+    @case ('item') {
+      <app-choice-game mode="item" (finishedChange)="refresh()" />
+    }
+    @case ('mob') {
+      <app-choice-game mode="mob" (finishedChange)="refresh()" />
+    }
+    @case ('mapa') {
+      <app-map-game (finishedChange)="refresh()" />
+    }
+  }
+
+  <p class="note">
+    Imagens do jogo via Deadlock API · Deadlock é marca da Valve. Seu progresso fica salvo só neste navegador.
+  </p>
+</section>

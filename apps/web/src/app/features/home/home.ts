@@ -111,7 +111,7 @@ export class Home {
   protected readonly quick = computed<QuickCard[]>(() => {
     const cards: QuickCard[] = [
       // Jogo diário sempre em primeiro: motivo para voltar todo dia
-      { key: 'daily', tag: 'Jogo diário', tone: 'meta', big: `#${dailyNumberToday()}`, text: 'Adivinhe o herói de hoje pela habilidade. Você tem 6 chances.', link: '/adivinhe' },
+      { key: 'daily', tag: 'Jogo diário', tone: 'meta', big: `#${dailyNumberToday()}`, text: '4 desafios novos: habilidade, item, mob e mapa. Quantos você acerta?', link: '/diario' },
     ];
 
     for (const n of this.news().slice(1, 4)) {

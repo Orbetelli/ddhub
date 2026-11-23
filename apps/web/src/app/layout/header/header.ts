@@ -58,7 +58,7 @@ export class Header {
         { label: 'Heróis', path: '/herois', hint: 'Habilidades e como jogar' },
         { label: 'Itens', path: '/itens', hint: 'A loja completa, por tier' },
         { label: 'Mapa', path: '/mapa', hint: 'Objetivos e acampamentos' },
-        { label: 'Adivinhe o herói', path: '/adivinhe', hint: 'Desafio diário' },
+        { label: 'DDhub Diário', path: '/diario', hint: 'Habilidade, item, mob e mapa' },
       ],
     },
     {

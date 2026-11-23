@@ -10,7 +10,8 @@ import { HeroStatsController } from './hero-stats.controller.js';
 
 @Module({
   controllers: [GameDataController, AssetRefsController, ItemsController, MapController, HeroStatsController],
-  providers: [DeadlockApiClient, GameSyncService],
-  exports: [GameSyncService],
+  // MapController também como provider: o jogo diário (modo Mapa) usa os mesmos dados
+  providers: [DeadlockApiClient, GameSyncService, MapController],
+  exports: [GameSyncService, MapController],
 })
 export class GameDataModule {}

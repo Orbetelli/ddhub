@@ -4,27 +4,66 @@ import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../api.config';
 
-export interface DailyHero {
+export type DailyMode = 'habilidade' | 'item' | 'mob' | 'mapa';
+export type ChoiceMode = Exclude<DailyMode, 'mapa'>;
+
+export const DAILY_MODES: { mode: DailyMode; label: string; question: string }[] = [
+  { mode: 'habilidade', label: 'Habilidade', question: 'De qual herói é esta habilidade?' },
+  { mode: 'item', label: 'Item', question: 'Que item é este? A imagem vai abrindo a cada erro.' },
+  { mode: 'mob', label: 'Mob', question: 'Que criatura ou estrutura é esta? A silhueta ganha cor a cada erro.' },
+  { mode: 'mapa', label: 'Mapa', question: 'Onde fica este pedaço do mapa? Clique no mapa inteiro.' },
+];
+
+export interface DailyOption {
   slug: string;
   name: string;
-  name_en: string | null;
-  image: string | null;
+  name_en?: string | null;
+  image?: string | null;
 }
 
-export interface DailyPuzzle {
+export interface ChoicePuzzle {
+  mode: ChoiceMode;
   number: number;
   date: string;
   max_guesses: number;
-  icon: string;
-  heroes: DailyHero[];
+  /** Caminho na API (/daily/:modo/image?d=…) */
+  image: string;
+  focus: { x: number; y: number } | null;
+  options: DailyOption[];
   next_at: string;
 }
 
-export interface DailyGuessResult {
+export interface MapPuzzle {
+  mode: 'mapa';
+  number: number;
+  date: string;
+  max_guesses: number;
+  map_image: string;
+  focus: { x: number; y: number };
+  next_at: string;
+}
+
+export interface ChoiceReveal {
+  slug: string;
+  name: string;
+  link: string;
+  detail: string | null;
+}
+
+export interface ChoiceGuessResult {
   number: number;
   correct: boolean;
   hints: string[];
-  answer: { hero: string; name: string; ability: string; slot: number } | null;
+  answer: ChoiceReveal | null;
+}
+
+export interface MapGuessResult {
+  number: number;
+  correct: boolean;
+  distance: number;
+  closeness: string;
+  direction: string | null;
+  answer: { x: number; y: number; label: string } | null;
 }
 
 /** Número do desafio de hoje (igual ao do servidor), para a home mostrar sem chamar a API. */
@@ -36,13 +75,21 @@ export function dailyNumberToday(): number {
 @Injectable({ providedIn: 'root' })
 export class DailyService {
   private readonly http = inject(HttpClient);
-  private readonly api = inject(API_BASE_URL);
+  readonly api = inject(API_BASE_URL);
 
-  today(): Observable<DailyPuzzle> {
-    return this.http.get<DailyPuzzle>(`${this.api}/daily`);
+  choice(mode: ChoiceMode): Observable<ChoicePuzzle> {
+    return this.http.get<ChoicePuzzle>(`${this.api}/daily/${mode}`);
   }
 
-  guess(hero: string, wrong: number): Observable<DailyGuessResult> {
-    return this.http.post<DailyGuessResult>(`${this.api}/daily/guess`, { hero, wrong });
+  map(): Observable<MapPuzzle> {
+    return this.http.get<MapPuzzle>(`${this.api}/daily/mapa`);
+  }
+
+  guessChoice(mode: ChoiceMode, guess: string, wrong: number): Observable<ChoiceGuessResult> {
+    return this.http.post<ChoiceGuessResult>(`${this.api}/daily/${mode}/guess`, { guess, wrong });
+  }
+
+  guessMap(x: number, y: number, wrong: number): Observable<MapGuessResult> {
+    return this.http.post<MapGuessResult>(`${this.api}/daily/mapa/guess`, { x, y, wrong });
   }
 }
