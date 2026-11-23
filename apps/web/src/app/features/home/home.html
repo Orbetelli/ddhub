@@ -28,9 +28,16 @@
       <a class="tile tile--hero" [routerLink]="['/noticias', f.slug]">
         @if (f.cover_url) {
           <img class="tile__cover" [src]="f.cover_url" alt="" />
+        } @else if (collage().length) {
+          <span class="collage" aria-hidden="true">
+            @for (c of collage(); track c.slug) {
+              <img class="collage__art" [src]="c.art" alt="" loading="lazy" />
+            }
+          </span>
         } @else {
           <span class="tile__backdrop" aria-hidden="true">{{ backdrop(f) }}</span>
         }
+        <span class="tile__shade" aria-hidden="true"></span>
         <span class="chips">
           <span class="chip chip--{{ f.category }}">{{ categoryLabel[f.category] }}</span>
           <span class="chip chip--muted">{{ ago(f.published_at) }}</span>
@@ -48,6 +55,17 @@
       <a class="tile tile--accent" [routerLink]="['/noticias', p.slug]">
         <span class="tile__label">Patch atual</span>
         <span class="tile__big">{{ p.published_at | date: 'dd/MM' }}</span>
+        @if (patchHeroes().length) {
+          <span class="patch-heroes">
+            <span class="patch-heroes__faces" aria-hidden="true">
+              @for (h of patchHeroes().slice(0, 8); track h.slug) {
+                @if (h.image) { <img class="patch-heroes__face" [src]="h.image" alt="" width="30" height="30" loading="lazy" /> }
+              }
+              @if (patchHeroes().length > 8) { <span class="patch-heroes__more">+{{ patchHeroes().length - 8 }}</span> }
+            </span>
+            <span class="patch-heroes__label">{{ patchHeroes().length }} {{ patchHeroes().length === 1 ? 'herói alterado' : 'heróis alterados' }}</span>
+          </span>
+        }
         <span class="tile__cta">Veja o que mudou →</span>
       </a>
     } @else {
@@ -59,7 +77,8 @@
     }
 
     @if (topHero(); as h) {
-      <a class="tile" [routerLink]="['/herois', h.slug]">
+      <a class="tile tile--hero-stat" [routerLink]="['/herois', h.slug]">
+        @if (h.art) { <img class="tile__art" [src]="h.art" alt="" loading="lazy" /> }
         <span class="tile__label">Herói em alta · Phantom+</span>
         <span class="tile__stat">
           <span class="tile__big tile__big--win">{{ pct(h.win_rate) }}</span>

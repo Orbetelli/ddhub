@@ -17,6 +17,8 @@ export interface HeroStat {
   slug: string;
   name: string;
   image: string | null;
+  /** Arte grande do herói (card), para destaque */
+  art: string | null;
   win_rate: number;
   matches: number;
 }
@@ -87,7 +89,7 @@ export class HeroStatsController {
       totals.set(id, t);
     }
 
-    const { data, error } = await this.supabase.db.from('hero_cards').select('id, slug, name, small_image');
+    const { data, error } = await this.supabase.db.from('hero_cards').select('id, slug, name, small_image, card_image');
     if (error) throw new Error('não foi possível ler os heróis');
     const byId = new Map(((data ?? []) as Row[]).map((h) => [Number(h['id']), h]));
 
@@ -99,6 +101,7 @@ export class HeroStatsController {
         slug: h['slug'],
         name: h['name'],
         image: h['small_image'] ?? null,
+        art: h['card_image'] ?? null,
         win_rate: Math.round((t.wins / t.matches) * 1000) / 10,
         matches: t.matches,
       });

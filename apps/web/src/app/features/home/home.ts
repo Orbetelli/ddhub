@@ -82,6 +82,17 @@ export class Home {
   /** Herói com maior win rate desde o patch. */
   protected readonly topHero = computed(() => this.heroStats().heroes[0] ?? null);
 
+  /** Arte de até 3 heróis em alta: fundo do destaque quando a notícia não tem imagem. */
+  protected readonly collage = computed(() =>
+    this.heroStats()
+      .heroes.filter((h) => h.art)
+      .slice(0, 3)
+      .map((h) => ({ slug: h.slug, art: h.art! })),
+  );
+
+  /** Heróis que o último patch mexeu (ícones no card laranja). */
+  protected readonly patchHeroes = computed(() => this.patch()?.heroes ?? []);
+
   /** Times ativos com mais gente no elenco. */
   protected readonly topTeams = computed(() =>
     this.teams()

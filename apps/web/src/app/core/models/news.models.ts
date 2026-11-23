@@ -22,5 +22,11 @@ export interface NewsDetail extends NewsItem {
 }
 
 export interface SiteMeta {
-  patch: { slug: string; title: string; published_at: string } | null;
+  patch: {
+    slug: string;
+    title: string;
+    published_at: string;
+    /** Heróis citados nas notas do patch (pode vir vazio) */
+    heroes?: { slug: string; name: string; image: string | null }[];
+  } | null;
 }

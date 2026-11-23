@@ -93,3 +93,25 @@ export function excerptFrom(markdown: string, max = 220): string {
     .trim();
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 }
+
+const STEAM_CLAN_IMAGES = 'https://clan.akamai.steamstatic.com/images/';
+
+/** Primeira imagem de um anúncio da Steam (banner), para usar de capa. null se não tiver. */
+export function firstSteamImage(raw: string): string | null {
+  const m =
+    /\[img\s+src=["']?([^"'\]\s]+)["']?[^\]]*\]/i.exec(raw ?? '') ?? /\[img\]\s*([^\[\s]+)\s*\[\/img\]/i.exec(raw ?? '');
+  if (!m) return null;
+  const url = m[1].replace(/^\{STEAM_CLAN(?:_LOC)?_IMAGE\}\/?/, STEAM_CLAN_IMAGES).replace(/^http:\/\//i, 'https://');
+  return /^https:\/\/\S+\.(png|jpe?g|gif|webp)(\?\S*)?$/i.test(url) ? url : null;
+}
+
+/** Heróis citados no texto do patch (pelo nome em inglês, como a Valve escreve). */
+export function heroesMentioned<T extends { name_en: string | null }>(raw: string, heroes: T[]): T[] {
+  const text = steamToMarkdown(raw ?? '');
+  return heroes.filter((h) => {
+    const name = h.name_en?.trim();
+    if (!name || name.length < 3) return false;
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s*&\s*/g, '\\s*(?:&|and)\\s*');
+    return new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`).test(text);
+  });
+}

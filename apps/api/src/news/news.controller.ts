@@ -2,7 +2,7 @@ import { BadRequestException, Controller, Get, InternalServerErrorException, Not
 
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { MemoryCache, TTL } from '../cache/memory-cache.service.js';
-import { excerptFrom, steamToMarkdown, stripSteamMedia } from './steam-markup.js';
+import { excerptFrom, firstSteamImage, heroesMentioned, steamToMarkdown, stripSteamMedia } from './steam-markup.js';
 
 export type NewsCategory = 'patch' | 'guia' | 'cenario' | 'comunidade';
 
@@ -59,20 +59,33 @@ export class NewsController {
     return this.cache.get(`news:${slug}`, TTL.content, () => this.loadOne(slug));
   }
 
-  /** Dados gerais do site: por enquanto, o último patch (faixa do topo). */
+  /** Dados gerais do site: o último patch (faixa do topo e card da home), com os heróis que ele cita. */
   @Get('meta')
   meta() {
     return this.cache.get('meta', TTL.content, async () => {
-      const { data, error } = await this.supabase.db
-        .from('patch_notes')
-        .select('gid, title, published_at')
-        .eq('is_patch', true)
-        .order('published_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const [{ data, error }, heroes] = await Promise.all([
+        this.supabase.db
+          .from('patch_notes')
+          .select('gid, title, body_raw, published_at')
+          .eq('is_patch', true)
+          .order('published_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        this.supabase.db.from('hero_cards').select('slug, name, name_en, small_image'),
+      ]);
       if (error) throw new InternalServerErrorException('Não foi possível carregar os dados do site.');
+      const mentioned = data
+        ? heroesMentioned(data.body_raw ?? '', (heroes.data ?? []) as { slug: string; name: string; name_en: string | null; small_image: string | null }[])
+        : [];
       return {
-        patch: data ? { slug: `steam-${data.gid}`, title: data.title as string, published_at: data.published_at as string } : null,
+        patch: data
+          ? {
+              slug: `steam-${data.gid}`,
+              title: data.title as string,
+              published_at: data.published_at as string,
+              heroes: mentioned.map((h) => ({ slug: h.slug, name: h.name, image: h.small_image })),
+            }
+          : null,
       };
     });
   }
@@ -113,7 +126,8 @@ export class NewsController {
         category: (p['is_patch'] ? 'patch' : 'comunidade') as NewsCategory,
         title: p['title_pt'] || p['title'],
         excerpt: excerptFrom(p['body_pt_md'] ? stripSteamMedia(p['body_pt_md']) : steamToMarkdown(p['body_raw'] ?? '')) || null,
-        cover_url: null,
+        // Banner do anúncio (primeira imagem), quando a Valve coloca um
+        cover_url: firstSteamImage(p['body_raw'] ?? ''),
         published_at: p['published_at'],
       })),
     ];

@@ -4,6 +4,8 @@ export interface HeroStat {
   slug: string;
   name: string;
   image: string | null;
+  /** Arte grande do herói (card) */
+  art?: string | null;
   /** Em porcentagem, com 1 casa (ex.: 53.9) */
   win_rate: number;
   matches: number;
