@@ -5,7 +5,7 @@ import { SupabaseService } from '../supabase/supabase.service.js';
 import { MemoryCache, TTL } from '../cache/memory-cache.service.js';
 
 /** Dia 1 do jogo (os números "#12" contam a partir daqui). */
-const LAUNCH = '2026-11-24';
+const LAUNCH = '2026-11-23';
 export const MAX_GUESSES = 6;
 
 const TYPE_LABEL: Record<string, string> = { assassin: 'Assassino', brawler: 'Lutador', marksman: 'Atirador', mystic: 'Místico' };

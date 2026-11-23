@@ -30,7 +30,7 @@ export interface DailyGuessResult {
 /** Número do desafio de hoje (igual ao do servidor), para a home mostrar sem chamar a API. */
 export function dailyNumberToday(): number {
   const day = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  return Math.max(Math.floor((Date.parse(`${day}T00:00:00Z`) - Date.parse('2026-11-24T00:00:00Z')) / 86_400_000) + 1, 1);
+  return Math.max(Math.floor((Date.parse(`${day}T00:00:00Z`) - Date.parse('2026-11-23T00:00:00Z')) / 86_400_000) + 1, 1);
 }
 
 @Injectable({ providedIn: 'root' })
