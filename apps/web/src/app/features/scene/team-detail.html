@@ -95,9 +95,14 @@
           <app-markdown [source]="t.bio_md" />
         </section>
       }
-      <section class="box">
+      <section class="box box--matches">
         <h2 class="box__title">Partidas</h2>
-        <p class="empty">Em breve: os jogos do time nos torneios importados do start.gg.</p>
+        @for (m of matches(); track m.id) {
+          <app-match-row [match]="m" [focus]="t.slug" />
+        } @empty {
+          <p class="empty">Nenhuma partida registrada ainda.</p>
+        }
+        <a class="more" routerLink="/partidas">Todas as partidas »</a>
       </section>
     </aside>
   </div>

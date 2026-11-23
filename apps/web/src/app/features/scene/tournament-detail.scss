@@ -1,0 +1,80 @@
+@use './scene';
+
+.banner { background: var(--surface-sub); border-bottom: 1px solid var(--border); }
+.banner__inner { display: flex; flex-direction: column; gap: 14px; padding-top: 20px; padding-bottom: 20px; }
+.banner__row { display: flex; align-items: center; gap: 18px; }
+.banner__text { min-width: 0; }
+.banner__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--text-strong);
+}
+.banner__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 8px 0 0; font-size: 14px; color: var(--muted); }
+
+.logo--big { width: 88px; height: 88px; font-size: 28px; }
+
+.tstatus {
+  font-family: var(--font-cond);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  &--ongoing { color: var(--live); }
+  &--upcoming { color: var(--accent); }
+  &--finished { color: var(--faint); }
+}
+
+.facts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; }
+.facts div { display: flex; flex-direction: column; }
+.facts dt { font-size: 11px; text-transform: uppercase; color: var(--faint); }
+.facts dd { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 900; color: var(--text-strong); }
+
+.layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; padding-top: 20px; padding-bottom: 56px; }
+.main { flex: 999 1 560px; min-width: 0; }
+.side { display: flex; flex-direction: column; gap: 16px; flex: 1 1 280px; min-width: 0; }
+
+.box--flush { padding: 0; }
+.box__title--pad { padding: 16px 16px 4px; }
+
+.day {
+  margin: 0;
+  padding: 10px 12px 6px;
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: var(--surface-head);
+}
+
+.empty { margin: 0; padding: 0 16px 16px; color: var(--muted); }
+
+.standings { margin: 0; padding: 0; list-style: none; }
+.standing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--row);
+  &:first-child { border-top: 0; }
+}
+.standing__place {
+  flex: none;
+  min-width: 46px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 16px;
+  color: var(--faint);
+  &--gold { color: #ffcf4a; }
+  &--silver { color: #d6d6d6; }
+  &--bronze { color: #d58a4b; }
+}
+.standing__team { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; color: var(--text-strong); }
+a.standing__team:hover { color: var(--accent-soft); }
+.standing__prize { flex: none; font-size: 13px; color: var(--win); }
+
+.source { font-size: 14px; color: var(--accent-soft); }

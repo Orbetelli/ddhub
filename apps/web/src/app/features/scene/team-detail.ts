@@ -8,12 +8,14 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { SceneService } from '../../core/services/scene.service';
 import { TeamDetail as Team, initials, socialLinks } from '../../core/models/scene.models';
 import { Markdown } from '../../shared/markdown/markdown';
+import { MatchRow } from '../../shared/match-row/match-row';
+import { MatchCard } from '../../core/models/scene.models';
 
 type LoadState = { status: 'loading' } | { status: 'not-found' } | { status: 'error' } | { status: 'ok'; team: Team };
 
 @Component({
   selector: 'app-team-detail',
-  imports: [RouterLink, DatePipe, Markdown],
+  imports: [RouterLink, DatePipe, Markdown, MatchRow],
   templateUrl: './team-detail.html',
   styleUrl: './team-detail.scss',
 })
@@ -37,6 +39,20 @@ export class TeamDetail {
       ),
     ),
     { initialValue: { status: 'loading' } as LoadState },
+  );
+
+  /** Últimas partidas do time (ao vivo e próximas aparecem primeiro). */
+  protected readonly matches = toSignal(
+    toObservable(this.slug).pipe(
+      switchMap((slug) => this.scene.matches({ team: slug, limit: 10 }).pipe(catchError(() => of<MatchCard[]>([])))),
+      map((list) =>
+        [...list].sort(
+          (a, b) =>
+            Number(b.status !== 'finished') - Number(a.status !== 'finished') || b.scheduled_at.localeCompare(a.scheduled_at),
+        ),
+      ),
+    ),
+    { initialValue: [] as MatchCard[] },
   );
 
   protected readonly team = computed(() => {

@@ -29,8 +29,22 @@ export const routes: Routes = [
     title: 'Notícia · DDhub',
     loadComponent: () => import('./features/news/news-article').then((m) => m.NewsArticle),
   },
-  ...section('partidas', 'Partidas', 'id'),
-  ...section('torneios', 'Torneios', 'slug'),
+  {
+    path: 'partidas',
+    title: 'Partidas · DDhub',
+    loadComponent: () => import('./features/scene/match-list').then((m) => m.MatchList),
+  },
+  { path: 'partidas/:id', redirectTo: 'partidas' },
+  {
+    path: 'torneios',
+    title: 'Torneios · DDhub',
+    loadComponent: () => import('./features/scene/tournament-list').then((m) => m.TournamentList),
+  },
+  {
+    path: 'torneios/:slug',
+    title: 'Torneio · DDhub',
+    loadComponent: () => import('./features/scene/tournament-detail').then((m) => m.TournamentDetail),
+  },
   {
     path: 'herois',
     title: 'Heróis · DDhub',

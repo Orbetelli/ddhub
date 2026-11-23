@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, of } from 'rxjs';
+import { catchError, combineLatest, map, of } from 'rxjs';
 
 import { NewsService } from '../../core/services/news.service';
 import { LiveService } from '../../core/services/live.service';
@@ -12,7 +12,8 @@ import { CreatorsService } from '../../core/services/creators.service';
 import { ARTICLE_CATEGORY_LABEL, ArticleCategory } from '../../core/models/portal.models';
 import { NewsItem } from '../../core/models/news.models';
 import { Creator } from '../../core/models/creator.models';
-import { TeamCard, initials } from '../../core/models/scene.models';
+import { MatchCard, TeamCard, initials } from '../../core/models/scene.models';
+import { MatchRow } from '../../shared/match-row/match-row';
 import { EMPTY_HERO_STATS } from '../../core/models/stats.models';
 
 /** Card da faixa "Em 30 segundos". */
@@ -35,7 +36,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, MatchRow],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -58,6 +59,15 @@ export class Home {
   private readonly creators = toSignal(this.creatorsService.list().pipe(catchError(() => of<Creator[]>([]))), {
     initialValue: [] as Creator[],
   });
+  /** Ao vivo e próximas primeiro; se não tiver, os últimos resultados. */
+  protected readonly matches = toSignal(
+    combineLatest([
+      this.scene.matches({ status: 'upcoming', limit: 3 }).pipe(catchError(() => of<MatchCard[]>([]))),
+      this.scene.matches({ status: 'results', limit: 3 }).pipe(catchError(() => of<MatchCard[]>([]))),
+    ]).pipe(map(([next, last]) => (next.length ? next : last))),
+    { initialValue: [] as MatchCard[] },
+  );
+
   private readonly heroStats = toSignal(this.stats.heroes(), { initialValue: EMPTY_HERO_STATS });
 
   protected readonly patch = computed(() => this.newsService.meta().patch);

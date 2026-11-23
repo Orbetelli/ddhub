@@ -1,0 +1,45 @@
+<section class="container page">
+  <header class="head">
+    <div>
+      <h1 class="title">Partidas</h1>
+      <p class="intro">Jogos ao vivo, próximos confrontos e resultados dos torneios com times brasileiros. Horários de Brasília.</p>
+    </div>
+    <a class="head__link" routerLink="/torneios">Ver torneios »</a>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') { <p class="status">Carregando partidas…</p> }
+    @case ('error') {
+      <div class="notice">
+        <strong>Não deu para carregar as partidas.</strong>
+        <span>Tenta recarregar a página em alguns segundos.</span>
+      </div>
+    }
+    @default {
+      @if (live().length) {
+        <section class="box box--flush box--live">
+          <h2 class="box__title box__title--pad"><span class="dot" aria-hidden="true"></span> Ao vivo</h2>
+          @for (m of live(); track m.id) { <app-match-row [match]="m" /> }
+        </section>
+      }
+
+      <section class="box box--flush">
+        <h2 class="box__title box__title--pad">Próximas</h2>
+        @for (m of upcoming(); track m.id) {
+          <app-match-row [match]="m" />
+        } @empty {
+          <p class="empty">Nenhuma partida marcada no momento.</p>
+        }
+      </section>
+
+      <section class="box box--flush">
+        <h2 class="box__title box__title--pad">Resultados</h2>
+        @for (m of results(); track m.id) {
+          <app-match-row [match]="m" />
+        } @empty {
+          <p class="empty">Nenhum resultado ainda.</p>
+        }
+      </section>
+    }
+  }
+</section>

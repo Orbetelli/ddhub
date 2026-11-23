@@ -118,7 +118,12 @@
       } @empty {
         <p class="box__empty">Os times brasileiros aparecem aqui em breve.</p>
       }
-      <p class="box__note">Partidas e torneios chegam em breve, direto do start.gg.</p>
+      @if (matches().length) {
+        <div class="box__matches">
+          @for (m of matches(); track m.id) { <app-match-row [match]="m" /> }
+        </div>
+      }
+      <p class="box__note"><a routerLink="/partidas">Partidas</a> · <a routerLink="/torneios">Torneios</a></p>
     </div>
 
     <div class="box box--cream">

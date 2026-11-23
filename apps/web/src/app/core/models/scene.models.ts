@@ -85,3 +85,88 @@ export function socialLinks(x: { twitch?: string | null; youtube?: string | null
   if (x.discord_url) out.push({ kind: 'discord', label: 'Discord', url: x.discord_url });
   return out;
 }
+
+// ───────── Torneios e partidas (GET /tournaments, /tournaments/:slug, /matches) ─────────
+
+export interface MatchSide {
+  /** null = time sem cadastro (seleção, time de fora): só o nome, sem link */
+  slug: string | null;
+  name: string;
+  tag: string | null;
+  logo_url: string | null;
+}
+
+export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'canceled';
+
+export interface MatchCard {
+  id: string;
+  tournament: { slug: string; name: string } | null;
+  stage: string | null;
+  best_of: number;
+  scheduled_at: string;
+  status: MatchStatus;
+  team1: MatchSide;
+  team2: MatchSide;
+  score1: number;
+  score2: number;
+  winner: 1 | 2 | null;
+  stream_url: string | null;
+}
+
+export type TournamentStatus = 'upcoming' | 'ongoing' | 'finished';
+
+export interface TournamentCard {
+  slug: string;
+  name: string;
+  organizer: string | null;
+  tier: string | null;
+  region: string | null;
+  prize_pool_usd: number | null;
+  teams_count: number | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  logo_url: string | null;
+  status: TournamentStatus;
+  winner: MatchSide | null;
+  matches_count: number;
+}
+
+export interface Placement {
+  place: string;
+  team: MatchSide;
+  prize_usd: number | null;
+}
+
+export interface TournamentDetail extends Omit<TournamentCard, 'winner' | 'matches_count'> {
+  bio_md: string;
+  external_url: string | null;
+  startgg_slug: string | null;
+  placements: Placement[];
+  matches: MatchCard[];
+}
+
+export const TOURNAMENT_STATUS_LABEL: Record<TournamentStatus, string> = {
+  upcoming: 'Em breve',
+  ongoing: 'Em andamento',
+  finished: 'Encerrado',
+};
+
+/** "14–15 nov 2026", "26 fev – 1 mar 2026" */
+export function dateRange(starts: string | null, ends: string | null): string {
+  if (!starts) return '';
+  const d = (iso: string) => new Date(`${iso}T12:00:00Z`);
+  const fmt = (x: Date, opts: Intl.DateTimeFormatOptions) => x.toLocaleDateString('pt-BR', { timeZone: 'UTC', ...opts });
+  const a = d(starts);
+  const b = ends ? d(ends) : a;
+  const month = (x: Date) => fmt(x, { month: 'short' }).replace('.', '');
+  if (a.getTime() === b.getTime()) return `${a.getUTCDate()} ${month(a)} ${a.getUTCFullYear()}`;
+  if (a.getUTCMonth() === b.getUTCMonth() && a.getUTCFullYear() === b.getUTCFullYear()) {
+    return `${a.getUTCDate()}–${b.getUTCDate()} ${month(a)} ${a.getUTCFullYear()}`;
+  }
+  return `${a.getUTCDate()} ${month(a)} – ${b.getUTCDate()} ${month(b)} ${b.getUTCFullYear()}`;
+}
+
+/** US$ 1.234 */
+export function usd(value: number | null): string {
+  return value === null ? '' : `US$ ${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
+}

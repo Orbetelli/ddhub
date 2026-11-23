@@ -1,0 +1,61 @@
+@let m = match();
+<div class="row" [class.row--live]="m.status === 'live'" [class.row--win]="result() === 'win'" [class.row--loss]="result() === 'loss'">
+  <span class="when">
+    @switch (m.status) {
+      @case ('live') { <span class="live"><span class="dot" aria-hidden="true"></span>Ao vivo</span> }
+      @case ('scheduled') {
+        <span class="when__day">{{ m.scheduled_at | date: 'dd/MM' }}</span>
+        <span class="when__time">{{ m.scheduled_at | date: 'HH:mm' }}</span>
+      }
+      @default { <span class="when__day">{{ m.scheduled_at | date: 'dd/MM/yy' }}</span> }
+    }
+  </span>
+
+  <span class="team team--1" [class.team--won]="m.winner === 1" [class.team--lost]="m.winner === 2">
+    @if (m.team1.slug) {
+      <a class="team__name" [routerLink]="['/times', m.team1.slug]">{{ m.team1.name }}</a>
+    } @else {
+      <span class="team__name">{{ m.team1.name }}</span>
+    }
+    @if (m.team1.logo_url) {
+      <img class="team__logo" [src]="m.team1.logo_url" alt="" width="24" height="24" loading="lazy" />
+    } @else {
+      <span class="team__logo team__logo--tag" aria-hidden="true">{{ m.team1.tag || initials(m.team1.name) }}</span>
+    }
+  </span>
+
+  <span class="score" [attr.aria-label]="m.status === 'scheduled' ? 'ainda não jogada' : m.score1 + ' a ' + m.score2">
+    @if (m.status === 'scheduled') {
+      <span class="score__vs">vs</span>
+    } @else {
+      <span [class.score--won]="m.winner === 1">{{ m.score1 }}</span>
+      <span class="score__sep">:</span>
+      <span [class.score--won]="m.winner === 2">{{ m.score2 }}</span>
+    }
+  </span>
+
+  <span class="team team--2" [class.team--won]="m.winner === 2" [class.team--lost]="m.winner === 1">
+    @if (m.team2.logo_url) {
+      <img class="team__logo" [src]="m.team2.logo_url" alt="" width="24" height="24" loading="lazy" />
+    } @else {
+      <span class="team__logo team__logo--tag" aria-hidden="true">{{ m.team2.tag || initials(m.team2.name) }}</span>
+    }
+    @if (m.team2.slug) {
+      <a class="team__name" [routerLink]="['/times', m.team2.slug]">{{ m.team2.name }}</a>
+    } @else {
+      <span class="team__name">{{ m.team2.name }}</span>
+    }
+  </span>
+
+  <span class="meta">
+    @if (showTournament() && m.tournament) {
+      <a class="meta__tournament" [routerLink]="['/torneios', m.tournament.slug]">{{ m.tournament.name }}</a>
+    }
+    <span class="meta__info">
+      @if (m.stage) { {{ m.stage }} · }Bo{{ m.best_of }}
+      @if (m.stream_url && m.status !== 'finished') {
+        · <a [href]="m.stream_url" target="_blank" rel="noopener noreferrer">assistir<span class="sr-only"> (abre em nova aba)</span></a>
+      }
+    </span>
+  </span>
+</div>

@@ -1,0 +1,63 @@
+<section class="container page">
+  <header class="head">
+    <div>
+      <h1 class="title">Torneios</h1>
+      <p class="intro">Os campeonatos de Deadlock com times brasileiros: classificação, chaves e resultados.</p>
+    </div>
+    <a class="head__link" routerLink="/partidas">Ver partidas »</a>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <ul class="list">@for (g of ghosts; track g) { <li class="card card--skeleton"></li> }</ul>
+    }
+    @case ('error') {
+      <div class="notice">
+        <strong>Não deu para carregar os torneios.</strong>
+        <span>Tenta recarregar a página em alguns segundos.</span>
+      </div>
+    }
+    @default {
+      @for (g of groups(); track g.key) {
+        <h2 class="sub">{{ g.label }}</h2>
+        <ul class="list">
+          @for (t of g.items; track t.slug) {
+            <li>
+              <a class="card" [class.card--live]="t.status === 'ongoing'" [routerLink]="['/torneios', t.slug]">
+                @if (t.logo_url) {
+                  <img class="logo" [src]="t.logo_url" alt="" width="56" height="56" loading="lazy" />
+                } @else {
+                  <span class="logo" aria-hidden="true">{{ initials(t.name) }}</span>
+                }
+                <span class="card__main">
+                  <span class="card__name">{{ t.name }}</span>
+                  <span class="card__meta">
+                    <span class="tstatus tstatus--{{ t.status }}">{{ statusLabel[t.status] }}</span>
+                    @if (t.starts_at) { <span>{{ dateRange(t.starts_at, t.ends_at) }}</span> }
+                    @if (t.region) { <span>{{ t.region }}</span> }
+                    @if (t.tier) { <span class="chip-tag">{{ t.tier }}</span> }
+                  </span>
+                </span>
+                <span class="card__facts">
+                  @if (t.prize_pool_usd !== null) { <span class="fact"><span class="fact__v">{{ usd(t.prize_pool_usd) }}</span><span class="fact__k">prêmio</span></span> }
+                  @if (t.teams_count) { <span class="fact"><span class="fact__v">{{ t.teams_count }}</span><span class="fact__k">times</span></span> }
+                </span>
+                @if (t.winner) {
+                  <span class="winner">
+                    <span class="winner__k">Campeão</span>
+                    <span class="winner__v">{{ t.winner.name }}</span>
+                  </span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      } @empty {
+        <div class="notice">
+          <strong>Nenhum torneio cadastrado ainda.</strong>
+          <span>Organiza campeonato de Deadlock? Em breve vai dar para divulgar aqui.</span>
+        </div>
+      }
+    }
+  }
+</section>

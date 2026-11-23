@@ -3,7 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
 
 import { API_BASE_URL } from '../api.config';
-import { PlayerDetail, TeamCard, TeamDetail, TransferEvent } from '../models/scene.models';
+import {
+  MatchCard,
+  PlayerDetail,
+  TeamCard,
+  TeamDetail,
+  TournamentCard,
+  TournamentDetail,
+  TransferEvent,
+} from '../models/scene.models';
 
 @Injectable({ providedIn: 'root' })
 export class SceneService {
@@ -26,5 +34,22 @@ export class SceneService {
 
   transfers(limit = 100): Observable<TransferEvent[]> {
     return this.http.get<TransferEvent[]>(`${this.api}/transfers?limit=${limit}`);
+  }
+
+  tournaments(): Observable<TournamentCard[]> {
+    return this.http.get<TournamentCard[]>(`${this.api}/tournaments`);
+  }
+
+  tournament(slug: string): Observable<TournamentDetail> {
+    return this.http.get<TournamentDetail>(`${this.api}/tournaments/${encodeURIComponent(slug)}`);
+  }
+
+  /** status: upcoming (ao vivo + próximas) | results (terminadas) | all */
+  matches(opts: { status?: 'upcoming' | 'results' | 'all'; team?: string; limit?: number } = {}): Observable<MatchCard[]> {
+    const params = new URLSearchParams();
+    if (opts.status) params.set('status', opts.status);
+    if (opts.team) params.set('team', opts.team);
+    params.set('limit', String(opts.limit ?? 50));
+    return this.http.get<MatchCard[]>(`${this.api}/matches?${params}`);
   }
 }

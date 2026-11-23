@@ -275,6 +275,8 @@
   &--cream &__title { color: #1a1206; }
   &__link { font-size: 14px; color: var(--cream); }
   &__empty, &__note { margin: 0; font-size: 13px; color: var(--faint); }
+  &__note a { color: var(--cream); font-weight: 600; }
+  &__matches { margin: 0 -22px; }
 }
 
 .team {
