@@ -17,7 +17,7 @@ const NOTICE_VERSION = '2026-11-24';
     @if (visible()) {
       <aside class="notice" role="region" aria-label="Aviso de privacidade">
         <p class="notice__text">
-          O DDhub não usa cookies de rastreamento. Guardamos só a preferência de nomes (PT/EN) e, se você entrar com a Steam, um cookie essencial de sessão.
+          O DDhub não usa cookies de rastreamento. Guardamos no navegador só preferências (nomes PT/EN, progresso do jogo diário) e, se você entrar com a Steam, um cookie essencial de sessão.
           <a routerLink="/privacidade">Política de Privacidade</a>
         </p>
         <button type="button" class="notice__btn" (click)="dismiss()">Entendi</button>

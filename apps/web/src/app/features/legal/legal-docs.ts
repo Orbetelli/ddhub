@@ -22,7 +22,7 @@ O DDhub é um portal feito por fãs para a comunidade brasileira de Deadlock, ma
 
 O DDhub **ainda não tem cadastro nem login**. Hoje funciona assim:
 
-- **Preferência de nomes (PT/EN):** fica salva só no seu navegador (localStorage), não chega até nós. Você apaga limpando os dados do site no navegador.
+- **Preferência de nomes (PT/EN) e progresso do jogo diário:** ficam salvos só no seu navegador (localStorage), não chegam até nós. Você apaga limpando os dados do site no navegador.
 - **Registros técnicos de acesso:** as empresas que hospedam o site (Vercel) e a API (Render) guardam, por pouco tempo, registros como endereço IP, data e página acessada, para segurança e funcionamento. Nós não usamos esses dados para identificar ninguém.
 - **Sem cookies de rastreamento:** não usamos Google Analytics, pixel de anúncio nem nada parecido.
 
@@ -50,6 +50,7 @@ Para funcionar, o site carrega conteúdo de outros serviços. Ao abrir uma pági
 
 - **Google Fonts** (fontes do site);
 - **Twitch, Kick e Steam** (avatares, miniaturas das lives e imagens do jogo);
+- **YouTube** (miniaturas dos vídeos dos criadores; os vídeos abrem no próprio YouTube);
 - **Deadlock API** (dados e imagens de heróis e itens).
 
 Os dados do site ficam no **Supabase**. As notícias da Steam são traduzidas automaticamente com a **Groq** (só o texto público dos anúncios, nenhum dado seu). Links para sites externos seguem as políticas desses sites.

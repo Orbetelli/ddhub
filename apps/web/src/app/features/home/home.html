@@ -114,6 +114,19 @@
     </section>
   }
 
+  <!-- ============ VÍDEOS BR ============ -->
+  @if (videos().length) {
+    <section class="videos" aria-labelledby="videos-title">
+      <header class="section-head">
+        <h2 id="videos-title" class="section-title">Vídeos BR</h2>
+        <a class="section-link" routerLink="/videos">Ver todos »</a>
+      </header>
+      <ul class="rail videos__rail">
+        @for (v of videos(); track v.id) { <li class="videos__item"><app-video-card [video]="v" /></li> }
+      </ul>
+    </section>
+  }
+
   <!-- ============ CENA + APRENDER ============ -->
   <section class="duo">
     <div class="box">

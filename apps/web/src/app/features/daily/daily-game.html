@@ -1,0 +1,97 @@
+<section class="container game">
+  <header class="head">
+    <h1 class="title">Adivinhe o herói</h1>
+    @if (puzzle(); as p) { <span class="num">#{{ p.number }}</span> }
+  </header>
+  <p class="intro">Todo dia uma habilidade nova. De qual herói ela é? Você tem 6 chances, e as dicas aparecem conforme você erra.</p>
+
+  @switch (state().status) {
+    @case ('loading') { <p class="status">Carregando o desafio de hoje…</p> }
+    @case ('error') {
+      <div class="notice"><strong>O jogo não carregou.</strong><span>Tenta recarregar a página em alguns segundos.</span></div>
+    }
+  }
+
+  @if (puzzle(); as p) {
+    <div class="board">
+      <div class="ability">
+        <img class="ability__icon" [src]="p.icon" alt="Ícone da habilidade misteriosa" width="128" height="128" />
+        <ul class="squares" aria-label="Tentativas">
+          @for (s of squares(); track $index) { <li class="sq sq--{{ s }}"></li> }
+        </ul>
+      </div>
+
+      <div class="play">
+        @if (progress().hints.length) {
+          <ul class="hints" aria-live="polite">
+            @for (h of progress().hints; track h) { <li class="hint">{{ h }}</li> }
+          </ul>
+        }
+
+        @if (!finished()) {
+          <form class="guess" (submit)="onEnter($event)">
+            <label for="palpite" class="sr-only">Digite o nome do herói</label>
+            <input
+              id="palpite"
+              class="guess__input"
+              type="text"
+              autocomplete="off"
+              placeholder="Digite um herói…"
+              [value]="query()"
+              (input)="onInput($event)"
+              [disabled]="sending()"
+            />
+            <span class="guess__left">{{ left() }} {{ left() === 1 ? 'chance' : 'chances' }}</span>
+          </form>
+          @if (options().length) {
+            <ul class="options">
+              @for (h of options(); track h.slug) {
+                <li>
+                  <button type="button" class="option" (click)="guess(h)" [disabled]="sending()">
+                    @if (h.image) { <img [src]="h.image" alt="" width="32" height="32" /> }
+                    <span>{{ h.name }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          @if (error()) { <p class="err" role="alert">{{ error() }}</p> }
+        }
+
+        @if (progress().guesses.length) {
+          <ol class="tries">
+            @for (g of progress().guesses; track g.slug) {
+              <li class="try" [class.try--hit]="g.correct">
+                @if (hero(g.slug)?.image) { <img [src]="hero(g.slug)!.image" alt="" width="28" height="28" /> }
+                <span>{{ hero(g.slug)?.name ?? g.slug }}</span>
+                <span class="try__mark">{{ g.correct ? 'Acertou' : 'Errou' }}</span>
+              </li>
+            }
+          </ol>
+        }
+      </div>
+    </div>
+
+    @if (finished()) {
+      <section class="result" [class.result--won]="won()" aria-live="polite">
+        <h2 class="result__title">{{ won() ? 'Acertou!' : 'Não foi dessa vez' }}</h2>
+        @if (progress().answer; as a) {
+          <p class="result__answer">
+            Era <strong>{{ a.ability }}</strong>, de
+            <a [routerLink]="['/herois', a.hero]">{{ a.name }}</a>.
+          </p>
+        }
+        <div class="result__actions">
+          <button type="button" class="btn" (click)="share()">{{ copied() ? 'Copiado!' : 'Compartilhar resultado' }}</button>
+          <span class="result__next">Próximo desafio em {{ nextIn() }}</span>
+        </div>
+        <dl class="stats">
+          <div><dt>Jogos</dt><dd>{{ stats().played }}</dd></div>
+          <div><dt>Vitórias</dt><dd>{{ stats().played ? ((stats().wins / stats().played) * 100).toFixed(0) : 0 }}%</dd></div>
+          <div><dt>Sequência</dt><dd>{{ stats().streak }}</dd></div>
+          <div><dt>Recorde</dt><dd>{{ stats().best }}</dd></div>
+        </dl>
+      </section>
+    }
+  }
+</section>

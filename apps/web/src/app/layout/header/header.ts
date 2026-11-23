@@ -58,6 +58,7 @@ export class Header {
         { label: 'Heróis', path: '/herois', hint: 'Habilidades e como jogar' },
         { label: 'Itens', path: '/itens', hint: 'A loja completa, por tier' },
         { label: 'Mapa', path: '/mapa', hint: 'Objetivos e acampamentos' },
+        { label: 'Adivinhe o herói', path: '/adivinhe', hint: 'Desafio diário' },
       ],
     },
     {
@@ -65,6 +66,7 @@ export class Header {
       label: 'Comunidade',
       links: [
         { label: 'Criadores', path: '/criadores', hint: 'Streamers e YouTubers BR' },
+        { label: 'Vídeos', path: '/videos', hint: 'Últimos vídeos BR de Deadlock' },
         { label: 'Builds', path: '/builds', hint: 'Builds da comunidade' },
         { label: 'Fórum', path: '/forum', hint: 'Discussões e dúvidas' },
       ],

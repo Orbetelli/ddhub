@@ -330,6 +330,11 @@
   }
 }
 
+// ───────── vídeos BR ─────────
+.section-link { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--accent); }
+.videos__rail { margin: 0; padding: 0 0 4px; list-style: none; }
+.videos__item { flex: none; width: 280px; scroll-snap-align: start; }
+
 // ───────── cena + aprender ─────────
 .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 

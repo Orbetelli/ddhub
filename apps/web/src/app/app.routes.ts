@@ -78,6 +78,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/items/item-detail/item-detail').then((m) => m.ItemDetail),
   },
   {
+    path: 'adivinhe',
+    title: 'Adivinhe o herói · DDhub',
+    loadComponent: () => import('./features/daily/daily-game').then((m) => m.DailyGame),
+  },
+  {
+    path: 'videos',
+    title: 'Vídeos BR · DDhub',
+    loadComponent: () => import('./features/videos/video-list').then((m) => m.VideoList),
+  },
+  {
     path: 'mapa',
     title: 'Mapa interativo · DDhub',
     loadComponent: () => import('./features/map/map-page').then((m) => m.MapPage),

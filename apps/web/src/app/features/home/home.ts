@@ -14,6 +14,9 @@ import { NewsItem } from '../../core/models/news.models';
 import { Creator } from '../../core/models/creator.models';
 import { MatchCard, TeamCard, initials } from '../../core/models/scene.models';
 import { MatchRow } from '../../shared/match-row/match-row';
+import { VideoCard } from '../../shared/video-card/video-card';
+import { Video, VideosService } from '../../core/services/videos.service';
+import { dailyNumberToday } from '../../core/services/daily.service';
 import { EMPTY_HERO_STATS } from '../../core/models/stats.models';
 
 /** Card da faixa "Em 30 segundos". */
@@ -36,7 +39,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, DatePipe, MatchRow],
+  imports: [RouterLink, DatePipe, MatchRow, VideoCard],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -67,6 +70,9 @@ export class Home {
     ]).pipe(map(([next, last]) => (next.length ? next : last))),
     { initialValue: [] as MatchCard[] },
   );
+
+  /** Últimos vídeos de Deadlock dos criadores BR. */
+  protected readonly videos = toSignal(inject(VideosService).list(8), { initialValue: [] as Video[] });
 
   private readonly heroStats = toSignal(this.stats.heroes(), { initialValue: EMPTY_HERO_STATS });
 
@@ -103,7 +109,10 @@ export class Home {
 
   /** "Em 30 segundos": um número grande e uma frase. Montado só com dados reais. */
   protected readonly quick = computed<QuickCard[]>(() => {
-    const cards: QuickCard[] = [];
+    const cards: QuickCard[] = [
+      // Jogo diário sempre em primeiro: motivo para voltar todo dia
+      { key: 'daily', tag: 'Jogo diário', tone: 'meta', big: `#${dailyNumberToday()}`, text: 'Adivinhe o herói de hoje pela habilidade. Você tem 6 chances.', link: '/adivinhe' },
+    ];
 
     for (const n of this.news().slice(1, 4)) {
       cards.push({
