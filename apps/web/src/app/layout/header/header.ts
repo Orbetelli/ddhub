@@ -6,6 +6,7 @@ import { filter, map, startWith } from 'rxjs';
 import { NamePreferenceService } from '../../core/services/name-preference.service';
 import { NewsService } from '../../core/services/news.service';
 import { UserMenu } from '../../shared/user-menu/user-menu';
+import { SearchBox } from '../../shared/search-box/search-box';
 
 interface NavLink {
   label: string;
@@ -27,7 +28,7 @@ const isGroup = (e: NavEntry): e is NavGroup => 'links' in e;
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive, UserMenu],
+  imports: [RouterLink, RouterLinkActive, UserMenu, SearchBox],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
