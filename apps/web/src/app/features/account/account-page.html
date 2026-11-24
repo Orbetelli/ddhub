@@ -1,0 +1,123 @@
+<section class="account">
+  <h1>Minha conta</h1>
+
+  @if (auth.user() === undefined) {
+    <p class="muted">Carregando…</p>
+  } @else if (!auth.user()) {
+    <div class="box">
+      <p>Entre com a sua conta Steam para ver e editar o seu perfil.</p>
+      <a class="btn" [href]="loginUrl()">Entrar com Steam</a>
+    </div>
+  } @else if (loadError()) {
+    <p class="muted">Não deu para carregar a sua conta agora. Recarregue a página em alguns segundos.</p>
+  } @else if (!data()) {
+    <p class="muted">Carregando…</p>
+  } @else {
+    @let d = data()!;
+
+    <!-- Perfil -->
+    <div class="box">
+      <div class="box__head">
+        <h2>Perfil</h2>
+        <a [routerLink]="['/u', d.user.username]">Ver perfil público →</a>
+      </div>
+      <div class="profile">
+        @if (d.user.avatar_url) {
+          <img class="avatar" [src]="d.user.avatar_url" alt="" width="88" height="88" />
+        } @else {
+          <span class="avatar avatar--empty" aria-hidden="true">{{ d.user.display_name.charAt(0) }}</span>
+        }
+        <p class="muted small">A foto vem da sua conta Steam e atualiza sempre que você entra.</p>
+      </div>
+
+      <label class="field">
+        <span>Nome de exibição</span>
+        <input type="text" maxlength="40" [value]="displayName()" (input)="displayName.set($any($event.target).value)" />
+        <small>{{ displayName().length }}/40</small>
+      </label>
+
+      <label class="field">
+        <span>&#64; (endereço do perfil)</span>
+        <div class="handle">
+          <em>ddhub/u/</em>
+          <input type="text" maxlength="24" [value]="username()" (input)="username.set($any($event.target).value)" autocomplete="off" spellcheck="false" />
+        </div>
+        <small>3 a 24 letras, números ou _ (sem espaço nem acento).</small>
+      </label>
+
+      <label class="field">
+        <span>Bio</span>
+        <textarea rows="3" maxlength="280" [value]="bio()" (input)="bio.set($any($event.target).value)" placeholder="Main de quem? Joga em qual time?"></textarea>
+        <small>{{ bio().length }}/280</small>
+      </label>
+
+      <div class="actions">
+        <button class="btn" type="button" (click)="save()" [disabled]="!dirty() || saving()">{{ saving() ? 'Salvando…' : 'Salvar' }}</button>
+        @if (dirty()) {
+          <button class="btn btn--ghost" type="button" (click)="reset()">Desfazer</button>
+        }
+        @if (saveMsg(); as m) {
+          <span class="msg" [class.msg--ok]="m.ok" role="status">{{ m.text }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Contas ligadas -->
+    <div class="box">
+      <h2>Contas ligadas</h2>
+      <ul class="links">
+        <li>
+          <strong>Steam</strong>
+          @if (steam(); as s) {
+            <span>{{ s.provider_username || 'conectada' }} · ligada em {{ s.linked_at | date: 'dd/MM/yyyy' }}</span>
+            <span class="ok">Conectada</span>
+          }
+        </li>
+        <li>
+          <strong>Discord</strong>
+          <span class="muted">Login com Discord chega em breve.</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Sessões e dados -->
+    <div class="box">
+      <h2>Segurança e dados</h2>
+      <div class="row">
+        <div>
+          <strong>Aparelhos conectados: {{ d.sessions.length }}</strong>
+          <p class="muted small">Cada navegador onde você entrou conta como um. Se entrou num PC que não é seu, saia de todos.</p>
+        </div>
+        <button class="btn btn--ghost" type="button" (click)="logoutAll()" [disabled]="busy()">Sair de todos</button>
+      </div>
+      <div class="row">
+        <div>
+          <strong>Baixar meus dados</strong>
+          <p class="muted small">Um arquivo com tudo o que o DDhub guarda sobre a sua conta (LGPD, art. 18).</p>
+        </div>
+        <button class="btn btn--ghost" type="button" (click)="download()">Baixar (.json)</button>
+      </div>
+    </div>
+
+    <!-- Excluir -->
+    <div class="box box--danger">
+      <h2>Excluir conta</h2>
+      <p>
+        Apaga <strong>na hora e para sempre</strong> o seu perfil, a ligação com a Steam e todas as sessões.
+        Não dá para desfazer. Se entrar de novo com a Steam depois, será uma conta nova.
+      </p>
+      <label class="field">
+        <span>Para confirmar, digite o seu &#64;: <strong>{{ d.user.username }}</strong></span>
+        <input type="text" [value]="confirmText()" (input)="confirmText.set($any($event.target).value)" autocomplete="off" spellcheck="false" />
+      </label>
+      <div class="actions">
+        <button class="btn btn--danger" type="button" (click)="remove()" [disabled]="!canDelete() || busy()">
+          {{ busy() ? 'Excluindo…' : 'Excluir minha conta' }}
+        </button>
+        @if (dangerMsg(); as m) {
+          <span class="msg" role="alert">{{ m }}</span>
+        }
+      </div>
+    </div>
+  }
+</section>

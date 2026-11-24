@@ -40,7 +40,8 @@ O login é feito **no site da própria Steam**: você digita a senha lá, nunca 
 - **O que guardamos:** SteamID64, nome e avatar da Steam, um nome de usuário no DDhub e a data do último login. **Não recebemos sua senha, e-mail, lista de amigos nem dados de pagamento.**
 - **Cookie de sessão:** ao entrar, o site grava um cookie essencial (*ddhub_session*) para lembrar que você está logado, por até 30 dias. Ele é *httpOnly* (nenhum script consegue ler), e no nosso banco fica só uma versão embaralhada (hash) dele. Ao clicar em **Sair**, a sessão é apagada.
 - **Base legal:** execução do serviço que você pediu (art. 7º, V, da LGPD).
-- **Excluir a conta:** por enquanto, peça por **${CONTACT_EMAIL}** e apagamos seus dados em até 15 dias. Um botão de exclusão vai entrar na página da conta.
+- **Seu perfil e seus dados:** em **Minha conta** você muda o nome de exibição, o @ e a bio, sai de todos os aparelhos e baixa um arquivo com tudo o que guardamos sobre a sua conta.
+- **Excluir a conta:** em **Minha conta → Excluir conta**. A exclusão é imediata: apagamos o perfil, a ligação com a Steam e as sessões. Se preferir, peça por **${CONTACT_EMAIL}**.
 
 Quando o login com **Discord** e o fórum entrarem no ar, esta seção será atualizada.
 

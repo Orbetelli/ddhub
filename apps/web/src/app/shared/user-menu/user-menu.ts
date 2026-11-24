@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, PLATFORM_ID, afterNextRender, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
 
@@ -8,11 +8,13 @@ const LOGIN_MESSAGES: Record<string, string> = {
   erro: 'Não deu para entrar com a Steam. Tenta de novo.',
   limite: 'Muitas tentativas de login. Espera alguns minutos.',
   suspensa: 'Esta conta está suspensa.',
+  excluida: 'Sua conta foi excluída. Seus dados foram apagados.',
 };
 
 /** Botão "Entrar com Steam" ou, logado, o avatar com o menu da conta. */
 @Component({
   selector: 'app-user-menu',
+  imports: [RouterLink],
   template: `
     @switch (state()) {
       @case ('loading') { <span class="placeholder" aria-hidden="true"></span> }
@@ -34,6 +36,8 @@ const LOGIN_MESSAGES: Record<string, string> = {
             @if (open()) {
               <div class="account__menu" role="menu">
                 <span class="account__who">Conectado como <strong>&#64;{{ u.username }}</strong></span>
+                <a role="menuitem" class="account__item" [routerLink]="['/u', u.username]" (click)="open.set(false)">Meu perfil</a>
+                <a role="menuitem" class="account__item" routerLink="/conta" (click)="open.set(false)">Minha conta</a>
                 <button type="button" role="menuitem" class="account__item" (click)="logout()">Sair</button>
               </div>
             }
@@ -42,7 +46,7 @@ const LOGIN_MESSAGES: Record<string, string> = {
       }
     }
     @if (message()) {
-      <p class="toast" role="status">{{ message() }}</p>
+      <p class="toast" [class.toast--ok]="ok()" role="status">{{ message() }}</p>
     }
   `,
   styles: `
@@ -99,6 +103,9 @@ const LOGIN_MESSAGES: Record<string, string> = {
     }
     .account__who { padding: 8px 10px; font-size: 13px; color: var(--muted); strong { color: var(--text-strong); } }
     .account__item {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
       min-height: 40px;
       padding: 0 10px;
       border: 0;
@@ -123,6 +130,7 @@ const LOGIN_MESSAGES: Record<string, string> = {
       font-size: 13px;
       color: var(--text);
     }
+    .toast--ok { border-left-color: var(--win); }
   `,
 })
 export class UserMenu {
@@ -133,6 +141,7 @@ export class UserMenu {
 
   protected readonly open = signal(false);
   protected readonly message = signal<string | null>(null);
+  protected readonly ok = signal(false);
 
   constructor() {
     // Volta da Steam com erro (?login=erro): mostra o aviso e limpa a URL
@@ -140,6 +149,7 @@ export class UserMenu {
       const code = new URLSearchParams(location.search).get('login');
       if (!code || !LOGIN_MESSAGES[code]) return;
       this.message.set(LOGIN_MESSAGES[code]);
+      this.ok.set(code === 'excluida');
       void this.router.navigate([], { queryParams: { login: null }, queryParamsHandling: 'merge', replaceUrl: true });
       setTimeout(() => this.message.set(null), 6000);
     });

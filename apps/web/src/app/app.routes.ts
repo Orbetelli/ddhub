@@ -14,6 +14,16 @@ const section = (path: string, heading: string, detailParam: string): Routes => 
 
 export const routes: Routes = [
   {
+    path: 'conta',
+    title: 'Minha conta · DDhub',
+    loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
+  },
+  {
+    path: 'u/:username',
+    title: 'Perfil · DDhub',
+    loadComponent: () => import('./features/account/user-profile').then((m) => m.UserProfile),
+  },
+  {
     path: 'privacidade',
     title: 'Política de Privacidade · DDhub',
     loadComponent: () => import('./features/legal/legal-page').then((m) => m.LegalPage),
