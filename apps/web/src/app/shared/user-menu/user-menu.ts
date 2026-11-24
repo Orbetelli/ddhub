@@ -37,6 +37,7 @@ const LOGIN_MESSAGES: Record<string, string> = {
               <div class="account__menu" role="menu">
                 <span class="account__who">Conectado como <strong>&#64;{{ u.username }}</strong></span>
                 <a role="menuitem" class="account__item" [routerLink]="['/u', u.username]" (click)="open.set(false)">Meu perfil</a>
+                <a role="menuitem" class="account__item" routerLink="/builds/minhas" (click)="open.set(false)">Minhas builds</a>
                 <a role="menuitem" class="account__item" routerLink="/conta" (click)="open.set(false)">Minha conta</a>
                 <button type="button" role="menuitem" class="account__item" (click)="logout()">Sair</button>
               </div>

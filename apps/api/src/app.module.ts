@@ -16,6 +16,7 @@ import { SceneModule } from './scene/scene.module.js';
 import { DailyModule } from './daily/daily.module.js';
 import { VideosModule } from './videos/videos.module.js';
 import { SearchModule } from './search/search.module.js';
+import { BuildsModule } from './builds/builds.module.js';
 import { AuthModule } from './auth/auth.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -42,6 +43,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     DailyModule,
     VideosModule,
     SearchModule,
+    BuildsModule,
     AuthModule,
     CreatorsModule,
   ],

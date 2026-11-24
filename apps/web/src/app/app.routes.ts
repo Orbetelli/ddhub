@@ -109,7 +109,31 @@ export const routes: Routes = [
     title: 'Criadores BR · DDhub',
     loadComponent: () => import('./features/creators/creator-list').then((m) => m.CreatorList),
   },
-  ...section('builds', 'Builds', 'id'),
+  {
+    path: 'builds',
+    title: 'Builds · DDhub',
+    loadComponent: () => import('./features/builds/build-list').then((m) => m.BuildList),
+  },
+  {
+    path: 'builds/nova',
+    title: 'Nova build · DDhub',
+    loadComponent: () => import('./features/builds/build-editor').then((m) => m.BuildEditor),
+  },
+  {
+    path: 'builds/minhas',
+    title: 'Minhas builds · DDhub',
+    loadComponent: () => import('./features/builds/my-builds').then((m) => m.MyBuilds),
+  },
+  {
+    path: 'builds/:id/editar',
+    title: 'Editar build · DDhub',
+    loadComponent: () => import('./features/builds/build-editor').then((m) => m.BuildEditor),
+  },
+  {
+    path: 'builds/:id',
+    title: 'Build · DDhub',
+    loadComponent: () => import('./features/builds/build-detail').then((m) => m.BuildDetail),
+  },
   { path: 'times', title: 'Times · DDhub', loadComponent: () => import('./features/scene/team-list').then((m) => m.TeamList) },
   { path: 'times/:slug', title: 'Time · DDhub', loadComponent: () => import('./features/scene/team-detail').then((m) => m.TeamDetail) },
   { path: 'jogadores/:slug', title: 'Jogador · DDhub', loadComponent: () => import('./features/scene/player-detail').then((m) => m.PlayerDetail) },

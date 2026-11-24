@@ -5,6 +5,8 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { AccountService, PublicProfile } from '../../core/services/account.service';
+import { BuildCard as Build, BuildsService } from '../../core/services/builds.service';
+import { BuildCard } from '../../shared/build-card/build-card';
 import { AuthService } from '../../core/services/auth.service';
 
 type State = { status: 'loading' } | { status: 'missing' } | { status: 'ok'; profile: PublicProfile };
@@ -12,7 +14,7 @@ type State = { status: 'loading' } | { status: 'missing' } | { status: 'ok'; pro
 /** Perfil público: /u/<@> */
 @Component({
   selector: 'app-user-profile',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, BuildCard],
   template: `
     <section class="profile">
       @switch (state().status) {
@@ -49,7 +51,25 @@ type State = { status: 'loading' } | { status: 'missing' } | { status: 'ok'; pro
               <a class="edit" routerLink="/conta">Editar perfil</a>
             }
           </header>
-          <p class="muted soon">Em breve: builds, posts no fórum e estatísticas de partidas aparecem aqui.</p>
+          <section class="builds">
+            <h2>Builds</h2>
+            @if (builds() === null) {
+              <p class="muted">Carregando…</p>
+            } @else if (!builds()!.length) {
+              <p class="muted">
+                Nenhuma build publicada ainda.
+                @if (isMe()) {
+                  <a routerLink="/builds/nova">Criar a primeira →</a>
+                }
+              </p>
+            } @else {
+              <div class="grid">
+                @for (b of builds(); track b.id) {
+                  <app-build-card [build]="b" [showAuthor]="false" />
+                }
+              </div>
+            }
+          </section>
         }
       }
     </section>
@@ -69,11 +89,13 @@ type State = { status: 'loading' } | { status: 'missing' } | { status: 'ok'; pro
     .edit { position: absolute; top: 20px; right: 20px; font-size: 14px; }
     @media (max-width: 560px) { .edit { position: static; } }
     .muted { color: var(--muted); }
-    .soon { font-size: 14px; }
+    .builds h2 { margin: 8px 0 10px; font-family: var(--font-cond); font-size: 18px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-strong); }
+    .builds .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
   `,
 })
 export class UserProfile {
   private readonly accounts = inject(AccountService);
+  private readonly buildsApi = inject(BuildsService);
   private readonly auth = inject(AuthService);
 
   /** Vem da rota /u/:username */
@@ -90,6 +112,20 @@ export class UserProfile {
       ),
     ),
     { initialValue: { status: 'loading' } as State },
+  );
+
+  /** Builds publicadas da pessoa (null = carregando) */
+  protected readonly builds = toSignal(
+    toObservable(this.username).pipe(
+      switchMap((u) =>
+        this.buildsApi.byUser(u).pipe(
+          map((r): Build[] | null => r.builds),
+          catchError(() => of<Build[] | null>([])),
+          startWith<Build[] | null>(null),
+        ),
+      ),
+    ),
+    { initialValue: null },
   );
 
   protected readonly profile = computed(() => {

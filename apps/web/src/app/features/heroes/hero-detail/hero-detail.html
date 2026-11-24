@@ -184,6 +184,7 @@
             <p class="note">
               Itens mais comprados com este herói em cada fase da partida, com taxa de escolha e de vitória.
               Dados: Deadlock API.
+              <a [routerLink]="['/builds']" [queryParams]="{ heroi: h.slug }">Ver builds da comunidade →</a>
             </p>
             <div class="phases">
               @for (phase of popularPhases(); track phase.label) {
