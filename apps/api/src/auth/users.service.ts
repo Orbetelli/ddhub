@@ -29,14 +29,14 @@ export class UsersService {
 
     const { data: identity, error } = await db
       .from('user_identities')
-      .select('user_id, users(is_banned, deleted_at)')
+      .select('user_id, users(is_banned, deleted_at, display_name, username)')
       .eq('provider', p.provider)
       .eq('provider_user_id', p.id)
       .maybeSingle();
     if (error) throw new Error(`identidade: ${error.message}`);
 
     if (identity) {
-      const u = identity.users as { is_banned?: boolean; deleted_at?: string | null } | null;
+      const u = identity.users as { is_banned?: boolean; deleted_at?: string | null; display_name?: string; username?: string } | null;
       if (u?.is_banned) throw new BannedError('conta suspensa');
       // Atualiza nome/avatar da plataforma (o nome de exibição no DDhub não muda sozinho)
       await db
@@ -45,6 +45,17 @@ export class UsersService {
         .eq('provider', p.provider)
         .eq('provider_user_id', p.id);
       if (p.avatar) await db.from('users').update({ avatar_url: p.avatar }).eq('id', identity.user_id);
+      // Conta criada sem o nick da Steam (ainda com o nome padrão): usa o nick agora
+      const display = (p.name ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      if (display && u?.display_name === 'Jogador') {
+        await db.from('users').update({ display_name: display }).eq('id', identity.user_id);
+        if (/^jogador\d*$/i.test(u.username ?? '')) {
+          for (let attempt = 0; attempt < 5; attempt++) {
+            const { error: nErr } = await db.from('users').update({ username: this.username(display, attempt) }).eq('id', identity.user_id);
+            if (!nErr || nErr.code !== '23505') break; // 23505 = nome já existe: tenta outro
+          }
+        }
+      }
       if (u?.deleted_at) {
         // Conta excluída antes: reativa como nova
         await db.from('users').update({ deleted_at: null }).eq('id', identity.user_id);
